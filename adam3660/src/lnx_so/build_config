@@ -1,0 +1,7 @@
+PKG_NAME=libbio1706
+PKG_VER=3.0.0
+ARCH=i386
+PKG_RELEASE=4
+PKG_GROUP=Applications/System
+MAINTAINER=Binwen.Xiao
+
