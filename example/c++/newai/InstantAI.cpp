@@ -66,6 +66,7 @@ int main(int argc, char* argv[])
    //InstantAiCtrl * instantAiCtrl = AdxInstantAiCtrlCreate();
    ret = BDaqDevice::Open(deviceNumber, ModeWrite, device);
     printf("2. device = %x ret = %x\n", device, ret);
+    FILE *fp = fopen("ADAM3660M4_V16.bin","r");
    do
    {
       // Step 2: Select a device by device number or device description and specify the access mode.
@@ -89,12 +90,22 @@ int main(int argc, char* argv[])
       do
       {
          //read samples and save to buffer 'scaledData'.
-         ret = ai->Read(0,startChannel,channelCount,rawData, scaledData);
+        // ret = ai->Read(1,startChannel,channelCount,rawData, scaledData);
    		// ret = ao->Write( startChannel, channelCount, rawData);
    		// ret = dio->DiRead(startPort, portCount, dioData);
    		// ret = dio->DoRead( startPort, portCount, dioData);
    		// ret = dio->DoWrite( startPort, portCount, dioData);
     //     printf("++++++++++++\n");
+
+			if(fp == NULL)
+			{
+				printf("failed to open file\n");
+				break;
+			}else{
+				printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ fp = %x\n", fp);
+			}
+    		ret = device->UpdateFirmware(1, fp);
+    		break;
          CHK_RESULT(ret);
 
          // process the acquired data. only show data here.
@@ -103,7 +114,8 @@ int main(int argc, char* argv[])
             printf("Channel %d data: %10.6f\n", i % channelCountMax, scaledData[i-startChannel]);
          }
          printf("\n");
-         SLEEP(1);
+         //SLEEP(1);
+         usleep(1000000);
       } while(!kbhit());
    }while(false);
 
@@ -119,6 +131,7 @@ int main(int argc, char* argv[])
 		printf("Some error occurred. And the last error code is Ox%X.\n", ret);
 		waitAnyKey();// wait any key to quit!
 	}
+	fclose(fp);
    return 0;
 }
 

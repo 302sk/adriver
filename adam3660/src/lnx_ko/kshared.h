@@ -217,7 +217,7 @@ enum MODULE_COMMAND_CODE{
    comm_ai_burnchk,
    comm_ai_alarm, 
 };
-
+#if 0
 typedef union _CHANNEL_RANGE
 {
    __u8 value;
@@ -226,7 +226,17 @@ typedef union _CHANNEL_RANGE
       __u8 start_chl : 4;
    };
 }CHANNEL_RANGE;
+#else
+typedef union _CHANNEL_RANGE
+{
+   __u16 value;
+   struct{
+      __u16 start_chl  : 8;
+      __u16 stop_chl : 8;
+   };
+}CHANNEL_RANGE;
 
+#endif
 //----------
 #pragma pack(1)
 typedef struct __PROTOCOL_MODULE_DATA
@@ -251,13 +261,12 @@ typedef struct __PROTOCOL_SPI_PACKAGE
 
 HEADER_INFO* add_header_info(SPI_PACKAGE *package, __u16 module_count, __u8 command, __u16 len);
 MODULE_INFO* add_module_info(SPI_PACKAGE *package, __u8 module_id, __u8 len);
-int add_module_data(SPI_PACKAGE *package, __u8 type, __u8 cmd, CHANNEL_RANGE rng, __u8 data[]);
-//int add_module_chksum(SPI_PACKAGE *package, __u16 chk_sum);
+int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data,  __u8 data[]);
 int add_module_chksum(SPI_PACKAGE *package, MODULE_INFO *info);
 int set_header_len(HEADER_INFO *header, __u16 len);
 
 
-int calc_data_len(int pkg_dir, int cmd_type, __u8 cmd, CHANNEL_RANGE chl_rng);
+int calc_data_len(int pkg_dir, MODULE_DATA *mdl_data);
 
 
 int find_header(SPI_PACKAGE *package);
@@ -266,8 +275,6 @@ int get_module_info(SPI_PACKAGE *package, MODULE_INFO *module);
 int get_module_data(SPI_PACKAGE *package, MODULE_DATA *module_data);
 __u16 get_module_chksum(SPI_PACKAGE *package);
 int get_data(SPI_PACKAGE *package, void *data, int len);
-
-
 
 #endif
 

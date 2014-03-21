@@ -139,6 +139,28 @@ typedef struct _DBG_USB_IO{
 
 //******************************************************************************************
 //                                                                                         *
+// IOCTL for device search and firmware download operation                                                        *
+//                                                                                         *
+//******************************************************************************************
+
+#define IOCTL_DEVICE_FIRMWARE_DOWNLOAD      _IO(BDAQ_DEV_MAGIC, 25)
+#define IOCTL_DEVICE_SEARCH                   _IO(BDAQ_DEV_MAGIC, 26)
+
+typedef struct _DEVICE_FIRMWAER_DOWNLOAD{
+   uint32 mdlNumber;
+   uint32 index;
+   uint32 len;
+   void   *data;
+   uint8 cmd;
+}DEVICE_FIRMWARE_DOWNLOAD;
+
+typedef struct _DEVICE_SEARCH_MODULE{
+   uint32 mdlNumber;
+   
+}DEVICE_SEARCH_MODULE;
+
+//******************************************************************************************
+//                                                                                         *
 // IOCTL for analog input operation                                                        *
 //                                                                                         *
 //******************************************************************************************

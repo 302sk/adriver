@@ -55,7 +55,7 @@ int daq_file_open(struct inode *in, struct file *fp)
 	daq_file_ctx_t	*ctx;
 	unsigned long	flags;
 	int		first_user, fmode_chk_ret = 0;
-   printk(KERN_ALERT"adam3660 open device\n");
+   //printk(KERN_ALERT"adam3660 open device\n");
 	if(unlikely(daq_dev->remove_pending)){
 		return -ENODEV;
 	}
@@ -295,7 +295,7 @@ long daq_file_ioctl( struct file *filp, unsigned int cmd, unsigned long arg)
 	daq_file_ctx_t	*ctx	= filp->private_data;
 	daq_device_t	*daq_dev= ctx->daq_dev;
 	int		ret;
-   printk(KERN_ALERT"daq file ioctl cmd = %x, IOCTL_AI_READ_SAMPLE = %x\n", cmd, IOCTL_AI_READ_SAMPLES);
+   //printk(KERN_ALERT"daq file ioctl cmd = %x, IOCTL_AI_READ_SAMPLE = %x\n", cmd, IOCTL_AI_READ_SAMPLES);
 	switch(cmd)
 	{
 		case IOCTL_DEVICE_GET_DESC:
@@ -322,7 +322,7 @@ long daq_file_ioctl( struct file *filp, unsigned int cmd, unsigned long arg)
          ret = daq_ioctl_ai_set_channel(daq_dev, arg);
          break;
 		case IOCTL_AI_READ_SAMPLES:
-         printk(KERN_ALERT"ai read samples\n");
+         //printk(KERN_ALERT"ai read samples\n");
 			ret = daq_ioctl_ai_read_sample(daq_dev, arg);
 			break;
       case IOCTL_AO_SET_CHAN_CFG:
@@ -343,6 +343,9 @@ long daq_file_ioctl( struct file *filp, unsigned int cmd, unsigned long arg)
 		case IOCTL_DIO_READ_DO_PORTS:
 			ret = daq_ioctl_do_read_port(daq_dev, arg);
 			break;
+      case IOCTL_DEVICE_FIRMWARE_DOWNLOAD:
+         ret = daq_device_fw_download(daq_dev, arg);
+         break;
 		default:
 			ret = -ENOTTY;
 			break;

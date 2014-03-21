@@ -1,5 +1,22 @@
 #include "kdriver.h"
 
+int add_task(daq_spi_transaction_t *cur, daq_task_info_t *task)
+{
+   int ret = 0;
+   if(task == NULL)
+      ret = -1;
+   if(cur->task_count < 10)
+   {
+      memcpy((__u8*)&cur->task_list[cur->task_count], (__u8*)task, sizeof(daq_task_info_t));
+      cur->task_count ++;
+      ret = 0;
+   }else{
+      ret = -1;
+   }
+   return ret;
+}
+
+
 static int calc_checksum(__u8 *data, __u16 *sum, __u16 len)
 {
    int i = 0;
@@ -39,8 +56,8 @@ HEADER_INFO* add_header_info(SPI_PACKAGE *package, __u16 module_count, __u8 comm
       return PKG_ERROR;
 
    header = (HEADER_INFO*)package->data;
-   header->header_str[0] = 0x00;//'A';
-   header->header_str[1] = 0x04;//'D';
+   header->header_str[0] = 'A';
+   header->header_str[1] = 'D';
    header->header_str[2] = 'A';
    header->header_str[3] = 'M';
 
@@ -71,23 +88,23 @@ MODULE_INFO* add_module_info(SPI_PACKAGE *package, __u8 module_id, __u8 len)
    return module_info;
 }
 
-int add_module_data(SPI_PACKAGE *package, __u8 type, __u8 cmd, CHANNEL_RANGE rng, __u8 *data)
+int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data, __u8 *data)
 {
    MODULE_DATA *module_data;
    __u16 data_len = 0;
    __u8*  data_write_pos = 0;
    int ret = 0;
 
-   data_len = calc_data_len(PKG_DIR_SND, type, cmd, rng); //calculate how much data should be sent
+   data_len = calc_data_len(PKG_DIR_SND, mdl_data); //calculate how much data should be sent
    printk(KERN_ALERT"-----------data len = %d data = %x\n", data_len, data);
    if((package->len - package->offset) < sizeof(MODULE_DATA) + data_len)
       return PKG_ERROR;
   
    module_data = (MODULE_DATA*)(package->data + package->offset);
-   module_data->command_type = type;
-   module_data->command = cmd;
-   module_data->channel_rng.value = rng.value;
-//   memcpy(module_data->data, data, MODULE_DATA_MAX);
+//   module_data->command_type = type;
+//   module_data->command = cmd;
+//   module_data->channel_rng.value = rng.value;
+   memcpy(module_data, mdl_data, sizeof(MODULE_DATA));
    package->offset += sizeof(MODULE_DATA);
    data_write_pos = (__u8 *)(package->data + package->offset);
    memcpy(data_write_pos, data, data_len);
@@ -111,12 +128,16 @@ int add_module_chksum(SPI_PACKAGE *package, MODULE_INFO *info)
    return sum;
 }
 
-int calc_data_len(int pkg_dir, int cmd_type, __u8 cmd, CHANNEL_RANGE chl_rng)
+int calc_data_len(int pkg_dir, MODULE_DATA *mdl_data)
 {
+   __u8 cmd_type = mdl_data->command_type;
+   __u8 cmd = mdl_data->command;
+   CHANNEL_RANGE chl_rng = mdl_data->channel_rng;
+   
    __u16 len = 0;
-   if(((cmd_type & comm_mode_read) && pkg_dir == PKG_DIR_SND) ||  //send read command, there's no data being sent.
-      (!(cmd_type & comm_mode_read) && pkg_dir == PKG_DIR_RCV) || //receive write command, there's no data coming back.
-      ((cmd_type & comm_st_error) && pkg_dir == PKG_DIR_RCV))     //read data error, no data
+   if(((cmd_type & comm_mode_read) && (pkg_dir == PKG_DIR_SND)) ||  //send read command, there's no data being sent.
+      ((!(cmd_type & comm_mode_read)) && (pkg_dir == PKG_DIR_RCV)) || //receive write command, there's no data coming back.
+      ((cmd_type & comm_st_error) && (pkg_dir == PKG_DIR_RCV)))     //read data error, no data
    {  
       
       return 0;
@@ -131,6 +152,7 @@ int calc_data_len(int pkg_dir, int cmd_type, __u8 cmd, CHANNEL_RANGE chl_rng)
             break;
          case comm_download_fw:
             //len = length of every firmware package
+            len = 16;
             break;
          case comm_upload_data:
             //len = length of every upload package
@@ -184,8 +206,8 @@ int find_header(SPI_PACKAGE *package)
    int header_pos = 0;
    for(header_pos = 0; header_pos < package->len; header_pos++)
    {
-      if(package->data[header_pos] == 0x00 &&             //'A'
-         package->data[header_pos+1] == 0x04 &&           //'D'
+      if(package->data[header_pos] == 'A' &&             //'A'
+         package->data[header_pos+1] == 'D' &&           //'D'
          package->data[header_pos+2] == 'A' &&
          package->data[header_pos+3] == 'M')
       {

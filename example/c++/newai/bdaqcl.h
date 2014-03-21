@@ -1339,6 +1339,7 @@ struct BDaqLib
    ErrorCode ( *pfnDeviceReset)(HANDLE,long);
    ErrorCode ( *pfnDeviceGetModuleHandle)(HANDLE,long,long,HANDLE*);
    ErrorCode ( *pfnDeviceRefreshProperties)(HANDLE);
+   ErrorCode ( *pfnDeviceFirmwareUpdate)(HANDLE, long, FILE*);
    //ErrorCode ( *pfnDeviceDownloadFirmware)(long, FILE*, void*);
    //ErrorCode ( *pfnDeviceSearchModule)(Module_INFO *);
 //   ErrorCode (  *pfnDeviceShowConfigDialogBox)(HANDLE,HWND,RECT*,long,BOOL,HWND*);
@@ -1416,6 +1417,7 @@ __inline BOOL InitializeBioDaqLibray(BDaqLib *bdaqLib)
 				( *(void **)&bdaqLib->pfnDeviceReset                    = dlsym(bdaqLib->instHandle, "AdxDeviceReset"));
 				( *(void **)&bdaqLib->pfnDeviceGetModuleHandle          = dlsym(bdaqLib->instHandle, "AdxDeviceGetModuleHandle"));
 				( *(void **)&bdaqLib->pfnDeviceRefreshProperties        = dlsym(bdaqLib->instHandle, "AdxDeviceRefreshProperties"));
+            ( *(void **)&bdaqLib->pfnDeviceFirmwareUpdate           = dlsym(bdaqLib->instHandle, "AdxDeviceFirmwareUpdate"));
             
 				//( bdaqLib->pfnDeviceShowConfigDialogBox      = dlsym(bdaqLib->instHandle, L"AdxDeviceShowConfigDialogBox"));
 				//AI apis
@@ -1611,6 +1613,14 @@ __inline ErrorCode   AdxDeviceGetModuleHandle(
 __inline ErrorCode   AdxDeviceRefreshProperties(IN HANDLE deviceHandle)
 {
    return GetBDaqLib()->pfnDeviceRefreshProperties(deviceHandle);
+}
+
+__inline ErrorCode   AdxDeviceFirmwareUpdate(
+   IN HANDLE     deviceHandle,
+   IN long       mdlNumber,
+   IN FILE*      fp)
+{
+   return GetBDaqLib()->pfnDeviceFirmwareUpdate(deviceHandle, mdlNumber, fp);
 }
 /*
 __inline ErrorCode   AdxDeviceShowConfigDialogBox(
@@ -2276,6 +2286,7 @@ public:
    ErrorCode GetModule(ModuleType type, long index, BDaqModule * & module);
 
    ErrorCode RefreshProperties();
+   ErrorCode UpdateFirmware(long mdlNumber, FILE *fp);
 /*   
    ErrorCode ShowModalDialog(HWND parentWnd, long dataSource);
    ErrorCode ShowPopupDialog(HWND parentWnd, long dataSource, HWND* dlgWnd);
@@ -3026,6 +3037,11 @@ inline ErrorCode BDaqDevice::GetModule(ModuleType type, long index, BDaqModule* 
 inline ErrorCode BDaqDevice::RefreshProperties()
 {
    return AdxDeviceRefreshProperties(get_Handle());
+}
+
+inline ErrorCode BDaqDevice::UpdateFirmware(long mdlNumber, FILE * fp)
+{
+   return AdxDeviceFirmwareUpdate(get_Handle(), mdlNumber, fp);
 }
 /*
 inline ErrorCode BDaqDevice::ShowModalDialog(HWND parentWnd, long dataSource)

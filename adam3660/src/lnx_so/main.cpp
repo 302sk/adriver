@@ -65,6 +65,13 @@ ErrorCode AdxDeviceGetModuleHandle(BDaqDevice* device, ModuleType type, uint32 i
 }
 
 extern "C"
+ErrorCode AdxDeviceFirmwareUpdate(BDaqDevice* device, uint32 mdlNumber, FILE *fp)
+{
+	CHK_USER_BUF(device);
+	return ((BDaqDeviceImpl *)device)->DeviceFirmwareUpdate(mdlNumber, fp);
+}
+
+extern "C"
 ErrorCode AdxDeviceClose(BDaqDevice* device)
 {
 	CHK_USER_BUF(device);

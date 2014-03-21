@@ -57,6 +57,7 @@ public:
    virtual ErrorCode Refresh();
    virtual ErrorCode Reset(uint32 state);
    virtual ErrorCode GetModule(ModuleType type, uint32 index, BDaqModule **module);
+   virtual ErrorCode DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp);
 
    virtual ErrorCode  ReadPorts(uint32 startAddr, uint32 length, void *buffer)
    {
@@ -159,6 +160,41 @@ ErrorCode BDaqDeviceImpl::GetModule(ModuleType type, uint32 index, BDaqModule **
    }
    return Success;
 }
+
+inline
+ErrorCode BDaqDeviceImpl::DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp)
+{
+   __u8 data[16];
+   DEVICE_FIRMWARE_DOWNLOAD test;
+   test.mdlNumber = mdlNumber;
+   test.index = 0;
+   test.data = data;
+   test.len = 2;
+   test.cmd = 1;  //start command
+
+   printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$user mode driver fp = %x\n", fp);
+   
+   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 1
+   usleep(10000);
+   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 2
+   usleep(10000);
+
+   test.index = 1;
+   test.cmd = 2;
+   while(1)
+   {
+      test.len = fread(data, 1, 16, fp);
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test);  //dwonload
+      if(test.len < 16)
+         break;
+      test.index ++;
+   }
+   test.cmd = 3; //reset
+   test.index = 0;
+   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test);    //reset
+   return Success;
+}
+
 
 inline
 ErrorCode BDaqDeviceImpl::EventGetHandle(EventId id, HANDLE &handle)

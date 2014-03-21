@@ -18,6 +18,7 @@
 #include <linux/io.h>
 #include <linux/spi/spidev.h>
 #include <asm/uaccess.h>
+#include <linux/time.h>
 
 #include <bdaqdef.h>
 #include <ioctls.h>
@@ -40,11 +41,12 @@ typedef struct daq_task_info{
 }daq_task_info_t;
 
 typedef struct daq_spi_transaction{
-   __u8 msg_id;
+   __u16 msg_id;
    daq_event_t* cmd_event;
    daq_event_t* rsp_event;
    daq_task_info_t task_list[10];
    __u8 task_count;
+   __u8 recv_count;
 }daq_spi_transaction_t;
 
 typedef struct daq_device
@@ -61,6 +63,8 @@ typedef struct daq_device
    //daq_spi_event_t events[10];
    daq_spi_transaction_t spi_transaction[2];
    int   curr_trsc;
+   daq_spi_transaction_t *request;
+   spinlock_t  trsc_lock;
    
 	spinlock_t	dev_lock;
 	int		remove_pending;
@@ -93,6 +97,13 @@ int daq_ioctl_do_read_port( daq_device_t *daq_dev, unsigned long arg );
 void daq_ai_initialize_hw( daq_device_t *daq_dev );
 int daq_ioctl_ai_read_sample( daq_device_t *daq_dev, unsigned long arg );
 int daq_ioctl_ai_set_channel(daq_device_t *daq_dev, unsigned long arg);
+
+//device.c
+int daq_device_fw_download(daq_device_t *daq_dev, unsigned long arg );
+
+//
+int add_task(daq_spi_transaction_t *cur, daq_task_info_t *task);
+
 
 //spiwrapper.c
 #define SPI_SND_PORT   0

@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 obj-m := adam3660io.o
-adam3660io-objs := init.o spiwrapper.o fops.o ai.o ao.o dio.o package.o#main.o event.o usbreader.o memory.o misc.o
+adam3660io-objs := init.o spiwrapper.o fops.o ai.o ao.o dio.o package.o device.o#main.o event.o usbreader.o memory.o misc.o
 
 
 ARCH=arm
