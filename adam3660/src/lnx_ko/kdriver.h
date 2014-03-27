@@ -36,8 +36,10 @@ typedef struct daq_file_ctx{
 
 typedef struct daq_task_info{
    __u8        module_id;
+   __u8        header_cmd;
    MODULE_DATA module_data;
-   __u8        data[16];
+   __u16       len;
+   __u8*       data;
 }daq_task_info_t;
 
 typedef struct daq_spi_transaction{
@@ -45,6 +47,8 @@ typedef struct daq_spi_transaction{
    daq_event_t* cmd_event;
    daq_event_t* rsp_event;
    daq_task_info_t task_list[10];
+   daq_task_info_t task_list_rcv[10];
+   __u8 rcv_data[256];
    __u8 task_count;
    __u8 recv_count;
 }daq_spi_transaction_t;

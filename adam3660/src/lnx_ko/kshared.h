@@ -143,6 +143,9 @@ enum HEADER_COMMAND_CODE{
    header_com_common = 0x0,
    header_com_search,
    header_com_download,
+   header_com_upload,
+   header_com_reset,
+   header_com_set,
 };
 
 typedef struct _PROTOCOL_HEADER_INFO
@@ -161,6 +164,10 @@ typedef struct _PROTOCOL_MODULE_INFO
    __u8     module_id;
    __u8     data_len;
 }MODULE_INFO;
+
+#define DL_NO_ERROR 0x00
+#define DL_IDX_ERROR 0x01
+#define DL_CHECKSUM_ERROR 0x02
 
 //----------module data command type--------------//
 //bit7   status   0:successful 1:error
@@ -183,11 +190,6 @@ enum COMMAND_TYPE_MODE{
 };
 
 enum MODULE_COMMAND_CODE{
-   comm_search_dev = 0x01,
-   comm_download_fw,
-   comm_upload_data,
-   comm_reset_fc,
-   comm_set_module,
 
    //DO command
    comm_do_rngcode = 0x10,
@@ -261,7 +263,7 @@ typedef struct __PROTOCOL_SPI_PACKAGE
 
 HEADER_INFO* add_header_info(SPI_PACKAGE *package, __u16 module_count, __u8 command, __u16 len);
 MODULE_INFO* add_module_info(SPI_PACKAGE *package, __u8 module_id, __u8 len);
-int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data,  __u8 data[]);
+int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data,  __u8 data[], __u16 len);
 int add_module_chksum(SPI_PACKAGE *package, MODULE_INFO *info);
 int set_header_len(HEADER_INFO *header, __u16 len);
 

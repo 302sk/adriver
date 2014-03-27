@@ -29,12 +29,6 @@ namespace Automation {
 #ifndef _BDAQ_TYPES_DEFINED
 #define _BDAQ_TYPES_DEFINED
 
-typedef enum tagTerminalBoard {
-   WiringBoard = 0,
-   PCLD8710,
-   PCLD789,
-   PCLD8115,
-} TerminalBoard;
 
 typedef enum tagModuleType {
    DaqAny   = -1,
@@ -2369,129 +2363,7 @@ protected:   // fields
    // module map, used to manage all the modules belongs to the device
    BDaqModuleManager m_cachedModules;
 };
-/*
-class BDaqEnumerator
-{
-public:
-   struct EnumDeviceArgs 
-   {
-      // current device information
-      long        DeviceNumber;
-      WCHAR      *Description;
-      BDaqDevice *Device; // Note: the device will be closed after the delegate returned.
-   }; 
 
-   struct EnumModuleArgs
-   {
-      // parent device information
-      long        DeviceNumber;
-      WCHAR      *Description;
-      BDaqDevice *Device; // Note: the device will be closed after the delegate returned.
-
-      // current module information
-      int         ModuleIndex;
-      BDaqModule *Module;
-   };
-
-   typedef BOOL (CALLBACK * EnumDeviceFunc)(EnumDeviceArgs *args, void *userParam);
-   typedef BOOL (CALLBACK * EnumModuleFunc)(EnumModuleArgs *args, void *userParam);
-
-   // Enumerate all devices which are on the system
-   static void EnumerateDevices(EnumDeviceFunc userFunc, void *userParam)
-   {
-      EnumerateDevices(DaqAny, userFunc, userParam);
-   }
-
-   // Enumerate all devices which are on the system and support the specified function
-   static void EnumerateDevices(ModuleType typeWanted, EnumDeviceFunc userFunc, void *userParam)
-   {
-      long deviceIndex = 0;
-      long deviceNumber;
-      WCHAR descBuff[256]; // device description buffer
-      ErrorCode ret;
-      BOOL keepGoing = true;
-
-      // the user doesn't care about the supported function of the device
-      if (typeWanted == DaqAny)
-      {
-         typeWanted = DaqDevice;
-      }
-
-      while(keepGoing)
-      {
-         ret = AdxDeviceGetLinkageInfo(-1, deviceIndex++, &deviceNumber, descBuff, NULL);
-         if (deviceNumber == -1)
-         {
-            break; // no more device
-         }
-         if (ret != Success)
-         {
-            continue; // device does not be on the system 
-         }
-
-         // open the device to do further check
-         BDaqDevice *device;
-         if (BDaqDevice::Open(deviceNumber, ModeRead, device) == Success)
-         {
-            // Does the device support the function the user wanted?
-            BDaqModule *module;
-            if (typeWanted == DaqDevice || device->GetModule(typeWanted, 0, module) == Success)
-            {
-               // Call the passed-in delegate to let the user do further action
-               EnumDeviceArgs args;
-               args.DeviceNumber = deviceNumber;
-               args.Description  = descBuff;
-               args.Device       = device;
-               keepGoing = userFunc(&args, userParam);
-            }
-            // close the device
-            device->Close();
-         }
-      } 
-   }
-
-   // Enumerate all modules which are on the system
-   static void EnumerateModules(ModuleType typeWanted, EnumModuleFunc userFunc, void *userParam)
-   {
-      EnumModuleCtx ctx = { typeWanted, userFunc, userParam };
-
-      EnumerateDevices(typeWanted, (EnumDeviceFunc)EnumDeviceCallBack, (void*)&ctx);
-   }
-
-private:
-   struct EnumModuleCtx
-   {
-      ModuleType      typeWanted;
-      EnumModuleFunc  userFunc;
-      void           *userParam;
-   };
-
-   static BOOL CALLBACK EnumDeviceCallBack(EnumDeviceArgs *devArgs, void *userParam)
-   {
-      EnumModuleCtx * ctx = (EnumModuleCtx*)userParam;
-
-      // save parent device information into our enumeration args
-      EnumModuleArgs modArgs = {devArgs->DeviceNumber, devArgs->Description, devArgs->Device};
-
-      // enumerating all wanted modules
-      BDaqModule *module;
-      for (int i = 0; true; ++i)
-      {
-         if (devArgs->Device->GetModule(ctx->typeWanted, i, module) != Success)
-         {
-            break;
-         }
-         modArgs.ModuleIndex = i;
-         modArgs.Module = module;
-         if (!ctx->userFunc(&modArgs, ctx->userParam))
-         {
-            return false; // break the enumeration
-         }
-      }
-      return true;
-   }
-};
-*/
 // *********************************************************************
 // inline functions of BDaqEvent
 // *********************************************************************

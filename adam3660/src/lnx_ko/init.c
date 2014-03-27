@@ -67,11 +67,11 @@ static int snd_thread(void *arg)
       if( cur->task_count > 0) 
       {
          __u8 proc_mask = 0;
-         printk(KERN_ALERT"++++task_count = %d current transcation: %d\n", cur->task_count, daq_dev->curr_trsc);
+//         printk(KERN_ALERT"++++task_count = %d current transcation: %d\n", cur->task_count, daq_dev->curr_trsc);
          for(i=0; i < cur->task_count; i++)
          {
-            daq_trace((KERN_ALERT"++++module_id = %d, type = %x, cmd = %x, chl_rng = %x\n",cur->task_list[i].module_id, \
-                       cur->task_list[i].module_data.command_type, cur->task_list[i].module_data.command, cur->task_list[i].module_data.channel_rng.value));
+//            daq_trace((KERN_ALERT"++++module_id = %d, type = %x, cmd = %x, chl_rng = %x\n",cur->task_list[i].module_id, \
+//                       cur->task_list[i].module_data.command_type, cur->task_list[i].module_data.command, cur->task_list[i].module_data.channel_rng.value));
          }
          spin_lock(&daq_dev->trsc_lock);  
          daq_dev->request = cur;
@@ -87,60 +87,80 @@ static int snd_thread(void *arg)
          //////////////////////////////////////////////////////
          int module_count = 0;
          int total_len = 0;
-         HEADER_INFO *head_info = add_header_info(&pkg, 1, 0, 0);
-         daq_trace((KERN_ALERT"++++1. add_header_info\n"));
-         for(i = 0; i < cur->task_count; i++)           
+         HEADER_INFO *head_info = add_header_info(&pkg, 1, header_com_common, 0);
+//         daq_trace((KERN_ALERT"++++1. add_header_info\n"));
+         ///////////////////////////preprocess task list////////////////////////////
+
+         for(i = 0; i < cur->task_count; i++)
          {
-            int j = 0;
-            int module_len = 0;
-            if(cur->task_list[i].module_id == 0)  //invalid id
-               continue;
-            if(((1 << cur->task_list[i].module_id) & proc_mask)) //had been processed
-               continue;
-            MODULE_INFO *module_info = add_module_info(&pkg, cur->task_list[i].module_id, 0);
-            proc_mask |= (1 << cur->task_list[i].module_id); //record processed id
-            module_count ++;
-            daq_trace((KERN_ALERT"++++2. add_module_info: id = %d, proc_mask = 0x%x, count = %d, <<%x\n ", module_info->module_id, proc_mask, module_count,\
-               (1<<cur->task_list[i].module_id)&proc_mask));
-            for(j = i; j < cur->task_count; j++)
+            if( cur->task_list[i].header_cmd == header_com_search)
             {
-               if(cur->task_list[j].module_id == module_info->module_id)
-               {
-                  MODULE_DATA *module_data = &cur->task_list[j].module_data;
-                  module_len += add_module_data(&pkg, module_data, cur->task_list[j].data);
-                  daq_trace((KERN_ALERT"++++3. add_module_data: module_len = %d, cmd = 0x%x\n", module_len, module_data->command));
-               }
+               head_info->command = header_com_search;
+               break;
+            }else if( cur->task_list[i].header_cmd == header_com_download ){
+               head_info->command = header_com_download;
             }
-            module_info->data_len += module_len;  //add module len to module info
-            add_module_chksum(&pkg, module_info);
-            daq_trace((KERN_ALERT"++++4. add_module_chksum: moduleInfo_len = %d\n", module_info->data_len));
-            total_len += module_info->data_len;  //total len in header info
+         }
+
+         if(head_info->command != header_com_search)
+         {
+            /////////////////////////////////////////////////////////
+            for(i = 0; i < cur->task_count; i++)           
+            {
+               int j = 0;
+               int module_len = 0;
+               if((head_info->command == header_com_download) && (cur->task_list[i].header_cmd != header_com_download)) //if there is a task with "download", skip those which is without "download"
+                  continue;
+               if(cur->task_list[i].module_id == 0)  //invalid id
+                  continue;
+               if(((1 << cur->task_list[i].module_id) & proc_mask)) //had been processed
+                  continue;
+               MODULE_INFO *module_info = add_module_info(&pkg, cur->task_list[i].module_id, 0);
+               proc_mask |= (1 << cur->task_list[i].module_id); //record processed id
+               module_count ++;
+//               daq_trace((KERN_ALERT"++++2. add_module_info: id = %d, proc_mask = 0x%x, count = %d, <<%x\n ", module_info->module_id, proc_mask, module_count,\
+//                  (1<<cur->task_list[i].module_id)&proc_mask));
+               for(j = i; j < cur->task_count; j++)
+               {
+                  if(cur->task_list[j].module_id == module_info->module_id)
+                  {
+                     MODULE_DATA *module_data = &cur->task_list[j].module_data;
+                     module_len += add_module_data(&pkg, module_data, cur->task_list[j].data, cur->task_list[j].len);
+//                     daq_trace((KERN_ALERT"++++3. add_module_data: module_len = %d, cmd = 0x%x, len = %d\n", module_len, module_data->command, cur->task_list[j].len));
+                  }
+               }
+               module_info->data_len += module_len;  //add module len to module info
+               add_module_chksum(&pkg, module_info);
+//               daq_trace((KERN_ALERT"++++4. add_module_chksum: moduleInfo_len = %d\n", module_info->data_len));
+               total_len += module_info->data_len;  //total len in header info
+            }
          }
          head_info->module_count = module_count;
          head_info->message_id = cur->msg_id;  //set message id
-         head_info->command = header_com_download;//header_com_common;
+ //        head_info->command = header_com_download;//header_com_common;
          set_header_len(head_info, total_len + sizeof(HEADER_INFO));
          pkg.len = pkg.offset;
          
-         printk(KERN_ALERT"++++5. head_info->len = %d pkg offset = %d\n", head_info->data_len, pkg.offset);
-
+//         printk(KERN_ALERT"++++5. head_info->len = %d pkg offset = %d\n", head_info->data_len, pkg.offset);
+#if 1
          printk(KERN_ALERT"++++package data: len = %d\n", pkg.offset);
          for(i=0; i<head_info->data_len; i++)
          {
             printk(KERN_ALERT"++++pkg.data[%d] = %x", i, pkg.data[i]);
          }
          printk(KERN_ALERT"++++package data end\n");
-
+#endif
          /////////////////////////////////////////////////////
          //clear task list
          spin_lock(&daq_dev->trsc_lock);
          cur->task_count = 0;
+         memset(cur->rcv_data, 0, 256);
          spin_unlock(&daq_dev->trsc_lock);
 
          uint32 pre = jiffies;
 
          spi_send(daq_dev->spi_snd, &pkg); 
-         int ret = daq_event_wait(1, &cur->rsp_event, 1, 100);  //wait data return from spi receive port or time out
+         int ret = daq_event_wait(1, &cur->rsp_event, 1, 1000);  //wait data return from spi receive port or time out
          daq_trace((KERN_ALERT"++++wait %d ms, %d jiffies\n", jiffies_to_msecs(jiffies-pre), jiffies-pre));
   //       daq_trace((KERN_ALERT"++++daq_event_wait ret = %d\n", ret));
          if(ret == 0)  //not time out
@@ -173,10 +193,20 @@ static int rcv_thread(void *arg)
    
    while(!kthread_should_stop())
    {
+      
       memset((__u8*)pkg_rcv.data, 0, 256);
       pkg_rcv.len = 256;
       pkg_rcv.offset = 0;
       spi_receive(daq_dev->spi_rcv, &pkg_rcv); //receive data
+ //     memcpy(daq_dev->request->rcv_data, pkg_rcv.data, 256);     //cpy
+      int rcv_data_offset = 0;
+
+  //    printk(KERN_ALERT"----package data: len = %d\n", header_info_rcv.data_len);
+//         for(i=0; i< 50; i++)
+//         {
+//            printk(KERN_ALERT"----pkg_rcv.data[%d] = %x", i, pkg_rcv.data[i]);
+//         }
+//      printk(KERN_ALERT"----package data end\n");
 
       if(PKG_ERROR == find_header(&pkg_rcv))   //there is no header in this package
       {
@@ -186,7 +216,7 @@ static int rcv_thread(void *arg)
       {
          continue;
       }
-#if 0
+#if 1
       printk(KERN_ALERT"----package data: len = %d\n", header_info_rcv.data_len);
          for(i=0; i< header_info_rcv.data_len; i++)
          {
@@ -199,7 +229,7 @@ static int rcv_thread(void *arg)
       {
          //response
          int count = 0;
-         printk(KERN_ALERT"----2. header len = %d\n", header_info_rcv.data_len);
+ //        printk(KERN_ALERT"----2. header len = %d\n", header_info_rcv.data_len);
          for(count = 0; count < header_info_rcv.data_len - sizeof(HEADER_INFO);)
          {
             int module_cnt = 0;
@@ -209,26 +239,30 @@ static int rcv_thread(void *arg)
                count += module_info_rcv.data_len;
                continue;
             }
-            printk(KERN_ALERT"----3. module info id = %d, len = %d\n", module_info_rcv.module_id, module_info_rcv.data_len);
+//            printk(KERN_ALERT"----3. module info id = %d, len = %d\n", module_info_rcv.module_id, module_info_rcv.data_len);
             count += module_info_rcv.data_len;       //move pointer to next module info
             for(module_cnt; module_cnt < module_info_rcv.data_len - sizeof(MODULE_INFO) - 2;)
             {
                __u16 real_data_len = 0;
                __u8 real_data[16] = {0};
                get_module_data(&pkg_rcv, &module_data_rcv);
-               printk(KERN_ALERT"----4. module data type = %x, cmd = %x, chl_rng = %x\n", module_data_rcv.command_type, module_data_rcv.command, module_data_rcv.channel_rng);
+//               printk(KERN_ALERT"----4. module data type = %x, cmd = %x, chl_rng = %x\n", module_data_rcv.command_type, module_data_rcv.command, module_data_rcv.channel_rng);
                
                real_data_len = calc_data_len(PKG_DIR_RCV, &module_data_rcv);
                get_data(&pkg_rcv, real_data, real_data_len);
-               //push data to task list
-               daq_dev->request->task_list[daq_dev->request->recv_count].module_id = module_info_rcv.module_id;
-               daq_dev->request->task_list[daq_dev->request->recv_count].module_data = module_data_rcv;
-               memcpy(daq_dev->request->task_list[daq_dev->request->recv_count].data, real_data, real_data_len);
+               //////////////////push data to task list fro receive//////////////////////
+               daq_dev->request->task_list_rcv[daq_dev->request->recv_count].module_id = module_info_rcv.module_id;
+               daq_dev->request->task_list_rcv[daq_dev->request->recv_count].module_data = module_data_rcv;
+               //memcpy(daq_dev->request->task_list[daq_dev->request->recv_count].data, real_data, real_data_len);
+               memcpy(daq_dev->request->rcv_data + rcv_data_offset, real_data, real_data_len);
+               daq_dev->request->task_list_rcv[daq_dev->request->recv_count].data = daq_dev->request->rcv_data + rcv_data_offset;
+               daq_dev->request->task_list_rcv[daq_dev->request->recv_count].len = real_data_len;
+               rcv_data_offset += real_data_len;
                daq_dev->request->recv_count ++;
-               //
-               printk(KERN_ALERT"----5. real data len = %d\n", real_data_len);
+               ////////////////////////////////
+//               printk(KERN_ALERT"----5. real data len = %d, reques = %x,recv_count = %d\n", real_data_len, daq_dev->request, daq_dev->request->recv_count);
                module_cnt += (sizeof(MODULE_DATA) + real_data_len);
-               printk(KERN_ALERT"----6. module count = %d\n", module_cnt);
+//               printk(KERN_ALERT"----6. module count = %d\n", module_cnt);
                //for()
             }
             
@@ -384,7 +418,7 @@ static ErrorCode daq_shared_init_debug(daq_device_t *daq_dev)
    
    shared->mdlFuncInfo[1].mdlNumber = 1;
    strcpy(shared->mdlFuncInfo[1].mdlName, "module1");
-   printk(KERN_ALERT"%s\n", shared->mdlFuncInfo[1].mdlName);
+   daq_trace((KERN_ALERT"%s\n", shared->mdlFuncInfo[1].mdlName));
    shared->mdlFuncInfo[1].funcInfo[module_func_ai].chlCount = 8;
    shared->mdlFuncInfo[1].funcInfo[module_func_ai].funcType = module_func_ai;
    for(i=0; i<8; i++)
@@ -480,12 +514,12 @@ static int __init daq_driver_init( void )
    daq_dev->spi_rcv_thrd = kthread_run(rcv_thread, (void *)daq_dev, "spi_rcv");
    if(daq_dev->spi_rcv_thrd == NULL)
    {
-      printk(KERN_ALERT"Create spi receive thread failed!\n");
+      daq_trace((KERN_ALERT"Create spi receive thread failed!\n"));
    }
    daq_dev->spi_snd_thrd = kthread_run(snd_thread, (void *)daq_dev, "spi_snd");
    if(daq_dev->spi_snd_thrd == NULL)
    {
-      printk(KERN_ALERT"Create spi send thread failed\n");
+      daq_trace((KERN_ALERT"Create spi send thread failed\n"));
    }
 
 	INIT_LIST_HEAD( &daq_dev->file_ctx_list);
@@ -570,7 +604,7 @@ static void __exit daq_driver_exit( void )
       kthread_stop(g_daq_dev->spi_snd_thrd);
       g_daq_dev->spi_snd_thrd = NULL;
    }
-	printk(KERN_ALERT"good by vfs\n");
+	daq_trace((KERN_ALERT"good by vfs\n"));
 	if( g_daq_dev->spi_snd != NULL ){
 		spi_close( g_daq_dev->spi_snd );
 	}

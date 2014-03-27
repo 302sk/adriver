@@ -88,22 +88,22 @@ MODULE_INFO* add_module_info(SPI_PACKAGE *package, __u8 module_id, __u8 len)
    return module_info;
 }
 
-int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data, __u8 *data)
+int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data, __u8 *data, __u16 len)
 {
    MODULE_DATA *module_data;
    __u16 data_len = 0;
    __u8*  data_write_pos = 0;
    int ret = 0;
-
-   data_len = calc_data_len(PKG_DIR_SND, mdl_data); //calculate how much data should be sent
-   printk(KERN_ALERT"-----------data len = %d data = %x\n", data_len, data);
+   
+   if(len == 0)
+      data_len = calc_data_len(PKG_DIR_SND, mdl_data); //calculate how much data should be sent
+   else
+      data_len = len;
+   
    if((package->len - package->offset) < sizeof(MODULE_DATA) + data_len)
       return PKG_ERROR;
   
    module_data = (MODULE_DATA*)(package->data + package->offset);
-//   module_data->command_type = type;
-//   module_data->command = cmd;
-//   module_data->channel_rng.value = rng.value;
    memcpy(module_data, mdl_data, sizeof(MODULE_DATA));
    package->offset += sizeof(MODULE_DATA);
    data_write_pos = (__u8 *)(package->data + package->offset);
@@ -135,36 +135,51 @@ int calc_data_len(int pkg_dir, MODULE_DATA *mdl_data)
    CHANNEL_RANGE chl_rng = mdl_data->channel_rng;
    
    __u16 len = 0;
-   if(((cmd_type & comm_mode_read) && (pkg_dir == PKG_DIR_SND)) ||  //send read command, there's no data being sent.
-      ((!(cmd_type & comm_mode_read)) && (pkg_dir == PKG_DIR_RCV)) || //receive write command, there's no data coming back.
-      ((cmd_type & comm_st_error) && (pkg_dir == PKG_DIR_RCV)))     //read data error, no data
-   {  
-      
+   if((cmd_type & comm_mode_read) && (pkg_dir == PKG_DIR_SND))
+   {
       return 0;
-      
    }
-   else
+   if(pkg_dir == PKG_DIR_RCV)
+   {
+      if(cmd_type & comm_st_error) //error , 1byte error code
+         return 1;
+      if(cmd_type & comm_dir_res)         //with response flag
+      {
+         if(cmd_type & comm_mode_read)   //read
+            goto calc_by_cmd;
+         else                            //write
+            return 0;
+      }else{                              //without response flag
+         if(cmd_type & comm_mode_read)    //read
+            return 0;
+         else
+            goto calc_by_cmd;             //write
+      }
+ 
+   }
+   
+//   if(((cmd_type & comm_mode_read) && (pkg_dir == PKG_DIR_SND)) ||  //send read command, there's no data being sent.
+//      ((!(cmd_type & comm_mode_read)) && (pkg_dir == PKG_DIR_RCV)) || //receive write command, there's no data coming back.
+//      ((cmd_type & comm_st_error) && (pkg_dir == PKG_DIR_RCV)))     //read data error, no data
+//   {  
+      
+//      return 0;
+      
+//   }
+//   else
+calc_by_cmd:
    {
       switch(cmd)
       {
-         case comm_search_dev:
-            //len = length of moduleId and module name
+         case header_com_search:
+            len = 19;
             break;
-         case comm_download_fw:
-            //len = length of every firmware package
-            len = 16;
-            break;
-         case comm_upload_data:
-            //len = length of every upload package
-            break;
-         case comm_reset_fc:
          case comm_ao_cal:
          case comm_ao_caltofac:
          case comm_ai_cal:
          case comm_ai_caltofac:
             len = 0;    //reset just a command sent to module,so there's no data after that command
             break;
-         case comm_set_module:
          case comm_ao_unit:
          case comm_ai_unit:
          case comm_ai_intgtime:

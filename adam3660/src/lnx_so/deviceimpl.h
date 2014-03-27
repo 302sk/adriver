@@ -162,10 +162,23 @@ ErrorCode BDaqDeviceImpl::GetModule(ModuleType type, uint32 index, BDaqModule **
 }
 
 inline
+static __u16 CalcCheckSum(__u8* data, __u16 len)
+{
+   int i = 0;
+   __u16 chk_sum = 0;
+   for(i = 0; i< len; i++)
+   {
+      chk_sum += data[i];
+   }
+   return chk_sum;
+}
+
+inline
 ErrorCode BDaqDeviceImpl::DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp)
 {
-   __u8 data[16];
+   __u8 data[68];
    DEVICE_FIRMWARE_DOWNLOAD test;
+   __u16 chk_sum = 0;
    test.mdlNumber = mdlNumber;
    test.index = 0;
    test.data = data;
@@ -175,18 +188,23 @@ ErrorCode BDaqDeviceImpl::DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp)
    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$user mode driver fp = %x\n", fp);
    
    m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 1
-   usleep(10000);
+   usleep(4000000);
    m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 2
-   usleep(10000);
+   usleep(4000000);
 
    test.index = 1;
    test.cmd = 2;
-   while(1)
+   while(!feof(fp))
    {
-      test.len = fread(data, 1, 16, fp);
+      test.len = fread(data, 1, 64, fp);
+      chk_sum += CalcCheckSum(data, test.len);
+      if(feof(fp))
+      {
+         test.index |= 0x8000;
+         *(__u16 *)(&data[test.len]) = chk_sum;
+         test.len += 2;
+      }
       m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test);  //dwonload
-      if(test.len < 16)
-         break;
       test.index ++;
    }
    test.cmd = 3; //reset
