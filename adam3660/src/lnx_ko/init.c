@@ -118,20 +118,20 @@ static int snd_thread(void *arg)
                MODULE_INFO *module_info = add_module_info(&pkg, cur->task_list[i].module_id, 0);
                proc_mask |= (1 << cur->task_list[i].module_id); //record processed id
                module_count ++;
-//               daq_trace((KERN_ALERT"++++2. add_module_info: id = %d, proc_mask = 0x%x, count = %d, <<%x\n ", module_info->module_id, proc_mask, module_count,\
-//                  (1<<cur->task_list[i].module_id)&proc_mask));
+               daq_trace((KERN_ALERT"++++2. add_module_info: id = %d, proc_mask = 0x%x, count = %d, <<%x\n ", module_info->module_id, proc_mask, module_count,\
+                  (1<<cur->task_list[i].module_id)&proc_mask));
                for(j = i; j < cur->task_count; j++)
                {
                   if(cur->task_list[j].module_id == module_info->module_id)
                   {
                      MODULE_DATA *module_data = &cur->task_list[j].module_data;
                      module_len += add_module_data(&pkg, module_data, cur->task_list[j].data, cur->task_list[j].len);
-//                     daq_trace((KERN_ALERT"++++3. add_module_data: module_len = %d, cmd = 0x%x, len = %d\n", module_len, module_data->command, cur->task_list[j].len));
+                     daq_trace((KERN_ALERT"++++3. add_module_data: module_len = %d, cmd = 0x%x, len = %d\n", module_len, module_data->command, cur->task_list[j].len));
                   }
                }
                module_info->data_len += module_len;  //add module len to module info
                add_module_chksum(&pkg, module_info);
-//               daq_trace((KERN_ALERT"++++4. add_module_chksum: moduleInfo_len = %d\n", module_info->data_len));
+               daq_trace((KERN_ALERT"++++4. add_module_chksum: moduleInfo_len = %d\n", module_info->data_len));
                total_len += module_info->data_len;  //total len in header info
             }
          }
@@ -141,7 +141,7 @@ static int snd_thread(void *arg)
          set_header_len(head_info, total_len + sizeof(HEADER_INFO));
          pkg.len = pkg.offset;
          
-//         printk(KERN_ALERT"++++5. head_info->len = %d pkg offset = %d\n", head_info->data_len, pkg.offset);
+         daq_trace((KERN_ALERT"++++5. head_info->len = %d pkg offset = %d\n", head_info->data_len, pkg.offset));
 #if 1
          printk(KERN_ALERT"++++package data: len = %d\n", pkg.offset);
          for(i=0; i<head_info->data_len; i++)
@@ -545,6 +545,7 @@ static int __init daq_driver_init( void )
 	CHK_RESULT(!IS_ERR(sysfs_dev), PTR_ERR(sysfs_dev), err_sysfs_reg)
 	
 	//initialize the device
+	daq_device_search(daq_dev, 0);  //search device
 
 	return 0;	
 err_sysfs_reg:
@@ -561,20 +562,6 @@ err_alloc_dev:
 	daq_trace((KERN_ALERT"Add 3660 IO driver failed\n"));
 	return ret;
 }
-/*
-	g_spisnd = spi_open( SPI_SND );
-	if(g_spisnd == NULL){
-		printk(KERN_ALERT"Open SPI device for send failed\n");
-	}else{
-		printk(KERN_ALERT"Open sending spi device successfully, g_spisnd = %x\n", g_spisnd);
-	}
-	g_spircv = spi_open( SPI_RCV );
-	if(g_spircv == NULL){
-		printk(KERN_ALERT"Open SPI device for recieve failed\n");
-	}else{
-		printk(KERN_ALERT"Open recieving spi device successfully, g_spircv = %x\n", g_spircv);
-	}
-*/
 
 void daq_device_cleanup()
 {

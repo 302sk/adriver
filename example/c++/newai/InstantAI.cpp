@@ -46,7 +46,8 @@ using namespace Automation::BDaq;
 int32        startChannel = 0;
 const int32  channelCount = 3;
 int32	startPort = 0;
-const int32	portCount = 2;
+const int32	portCount = 8;
+
 
 inline void waitAnyKey()
 {
@@ -84,17 +85,25 @@ int main(int argc, char* argv[])
       printf("Acquisition is in progress, any key to quit!\n\n");
       double   scaledData[channelCount] = {0};//the count of elements in this array should not be less than the value of the variable channelCount
       int16		rawData[channelCount] = {0};
-      BYTE		dioData[portCount] = {0};
+      BYTE		dioData[ 1 ] = {0xcc};
+      BYTE		rngCode[channelCount] = {0};
       int32 channelCountMax = 4;//instantAiCtrl->getFeatures()->getChannelCountMax();
 
       do
       {
          //read samples and save to buffer 'scaledData'.
-         ret = ai->Read(1,startChannel,channelCount,rawData, scaledData);
+        // ret = ai->Read(1,startChannel,channelCount,rawData, scaledData);
+     //   memset(rngCode, 0x55, channelCount);
+     //   	ret = ai->SetValueRange(1, startChannel, channelCount, rngCode);
+     //   	memset(rngCode, 0, channelCount);
+     //      ret = ai->GetValueRange(1, startChannel, channelCount, rngCode);
    		// ret = ao->Write( startChannel, channelCount, rawData);
-   		// ret = dio->DiRead(startPort, portCount, dioData);
-   		// ret = dio->DoRead( startPort, portCount, dioData);
-   		// ret = dio->DoWrite( startPort, portCount, dioData);
+   		// ret = dio->DiRead(1,startPort, portCount, dioData);
+   		// printf("dio value: %x\n", dioData[0]);
+   		// ret = dio->DoWrite(1, startPort, portCount, dioData);
+   		// memset(dioData, 0, 1);
+   		  ret = dio->DoRead(1, startPort, portCount, dioData);
+   		  printf("dio value: %x\n", dioData[0]);
     //     printf("++++++++++++\n");
 
 			if(fp == NULL)
@@ -111,7 +120,8 @@ int main(int argc, char* argv[])
          // process the acquired data. only show data here.
          for (int32 i = startChannel; i< startChannel+channelCount;++i)
          {
-    //        printf("Channel %d data: %10.6f\n", i % channelCountMax, scaledData[i-startChannel]);
+            printf("Channel %d data: %x\n", i % channelCountMax, rawData[i-startChannel]);
+            printf("Channel %d rangecode: %x\n", i%channelCountMax, rngCode[i-startChannel]);
          }
          printf("\n");
          //SLEEP(1);

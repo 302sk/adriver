@@ -104,6 +104,8 @@ int daq_ioctl_ai_set_channel(daq_device_t *daq_dev, unsigned long arg);
 
 //device.c
 int daq_device_fw_download(daq_device_t *daq_dev, unsigned long arg );
+int daq_device_search(daq_device_t *daq_dev, unsigned long arg );
+
 
 //
 int add_task(daq_spi_transaction_t *cur, daq_task_info_t *task);

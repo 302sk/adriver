@@ -184,8 +184,6 @@ ErrorCode BDaqDeviceImpl::DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp)
    test.data = data;
    test.len = 2;
    test.cmd = 1;  //start command
-
-   printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$user mode driver fp = %x\n", fp);
    
    m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 1
    usleep(4000000);

@@ -102,6 +102,7 @@ protected:
 
 
 protected:
+   uint32 get_chl_count(uint32 mdlNumber);
    ErrorCode GetGainCode(uint32 chStart, uint32 chCount, void *valueRange, void *gainCode);
    ErrorCode GetValuleRange(uint32 gain, uint32 &valueRange);
 //   ErrorCode CheckUserChanCnntType(uint32 * types, uint32 count);
@@ -193,7 +194,7 @@ ErrorCode BDaqAiImpl::AccessAiValueRange(uint32 mdlNumber, uint32 chStart, uint3
 {
    ErrorCode warning = Success;
    ErrorCode ret = Success;
-   uint32 mdlAiChlCount = m_kstubPtr->getShared()->mdlFuncInfo[mdlNumber].funcInfo[module_func_ai].chlCount;
+   uint32 mdlAiChlCount = get_chl_count(mdlNumber);
    if( mdlAiChlCount == 0 )  //there is no ai function on the module
       return ErrorFuncNotSpted;
    if(chStart >= mdlAiChlCount)
@@ -210,31 +211,46 @@ ErrorCode BDaqAiImpl::AccessAiValueRange(uint32 mdlNumber, uint32 chStart, uint3
       chCount = mdlAiChlCount - chStart;
       SET_WARN(warning, WarningParamOutOfRange );
    }
-   uint32 chanGain[chCount];
-   GetGainCode(chStart, chCount, valueRange, chanGain);
-   AI_SET_CHAN setChan  = { mdlNumber, chStart, chCount, chanGain };
+   uint8 chanGain[chCount];
+
+
+//   GetGainCode(chStart, chCount, valueRange, chanGain);
+   
    
    if(optFlag == 1) //set value range
    {
       //SetChanConfig
+      AI_SET_CHAN setChan  = { mdlNumber, chStart, chCount, 1, valueRange };
       if (m_kstubPtr->Ioctl(IOCTL_AI_SET_CHAN_CFG, &setChan)) {
          ret = ErrorDeviceIoTimeOut;
       }
       
    }else{
       //get channel value range 
-      uint32 chl = 0;
-      uint32 *vrg = (uint32 *)valueRange;
-      for(chl =0; chl<chCount; chl++)
-      {
-         uint32 gain = m_kstubPtr->getShared()->mdlFuncInfo[mdlNumber].funcInfo[module_func_ai].gainCode[chStart + chl];
-         GetValuleRange(gain, vrg[chl]);
+      AI_SET_CHAN getChan  = { mdlNumber, chStart, chCount, 0, valueRange };
+      if (m_kstubPtr->Ioctl(IOCTL_AI_SET_CHAN_CFG, &getChan)) {
+         ret = ErrorDeviceIoTimeOut;
       }
+
       
    }
    return ret != Success ? ret : warning;
 }
 
+
+inline 
+uint32 BDaqAiImpl::get_chl_count(uint32 mdlNumber)
+{
+   int i = 0;
+   for(i = 0; i < MODULE_MAX_COUNT; i++)
+   {
+      if(m_kstubPtr->getShared()->mdlProfile[i].module_id == mdlNumber)
+      {
+         return m_kstubPtr->getShared()->mdlProfile[i].module_resource.ai_chl_num;
+      }
+   }
+   return 0;
+}
 
 inline
 ErrorCode BDaqAiImpl::ReadSamples(uint32 mdlNumber, uint32 chStart, uint32 chCount, void *rawData, double *scaledData)
@@ -247,7 +263,7 @@ ErrorCode BDaqAiImpl::ReadSamples(uint32 mdlNumber, uint32 chStart, uint32 chCou
       rawData = rawBuff;
    }
    ErrorCode warning = Success;
-   uint32 mdlAiChlCount = m_kstubPtr->getShared()->mdlFuncInfo[mdlNumber].funcInfo[module_func_ai].chlCount;
+   uint32 mdlAiChlCount = get_chl_count(mdlNumber);
    if( mdlAiChlCount == 0 )  //there is no ai on the module
       return ErrorFuncNotSpted;
    if(chStart >= mdlAiChlCount)

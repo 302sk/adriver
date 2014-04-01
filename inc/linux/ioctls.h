@@ -180,6 +180,7 @@ typedef struct _AI_SET_CHAN{
    uint32      PhyChanStart;  // Physical channel number of the start channel to configure.
    uint32      PhyChanCount;  // Physical channel count to configure.
    //AI_CHAN_CFG *ChanCfg;      // variable length array for channel data.
+   uint32      SetFlag;
    void        *data;         //channel gain code
 }AI_SET_CHAN;
 

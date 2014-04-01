@@ -198,7 +198,7 @@ calc_by_cmd:
          case comm_do_data:
          case comm_di_data:
             len = (chl_rng.stop_chl - chl_rng.start_chl + 1)/8;           ///1 byte per port(8 channel)
-            len += ((chl_rng.stop_chl - chl_rng.start_chl + 1)%8 == 0) ? len : len+1;
+            len = ((chl_rng.stop_chl - chl_rng.start_chl + 1)%8 == 0) ? len : len+1;
             break;
          case comm_ai_data:
          case comm_ao_data:

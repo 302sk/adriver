@@ -2129,8 +2129,8 @@ public:
    ErrorCode Read(long mdlNumber, long chStart, long chCount, short dataRaw[], double dataScaled[]);   // for the device whose raw data is in 16bits format
    ErrorCode Read(long mdlNumber, long chStart, long chCount, long dataRaw[], double dataScaled[]) ;   // for the device whose raw data is in 32bits format
 
-   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
-   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
+   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
+   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
    // buffered AI methods
    ErrorCode BfdAiPrepare(long dataCount, void* * dataRaw);
    ErrorCode BfdAiRunOnce(bool asynchronous);
@@ -2162,8 +2162,8 @@ public:
    ErrorCode Write(long mdlNumber, long chStart, long chCount, short dataRaw[]);   // for the device whose raw data is in 16bits format
    ErrorCode Write(long mdlNumber, long chStart, long chCount, long dataRaw[]);    // for the device whose raw data is in 32bits format
 
-   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
-   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
+   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
+   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
    // buffered AO methods
    ErrorCode BfdAoPrepare(long dataCount, void* * dataRaw);
    ErrorCode BfdAoRunOnce(bool asynchronous);
@@ -2517,12 +2517,12 @@ inline ErrorCode BDaqAi::Read(long mdlNumber, long chStart, long chCount, long d
    return AdxAiReadSamples(get_Handle(), mdlNumber, chStart, chCount, dataRaw, dataScaled);
 }
 
-inline ErrorCode BDaqAi::SetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
+inline ErrorCode BDaqAi::SetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
 {
    return AdxAiSetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
 
-inline ErrorCode BDaqAi::GetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
+inline ErrorCode BDaqAi::GetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
 {
    return AdxAiGetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
@@ -2589,12 +2589,12 @@ inline ErrorCode BDaqAo::Write(long mdlNumber, long chStart, long chCount, long 
    return AdxAoWriteSamples(get_Handle(), mdlNumber, chStart, chCount, dataRaw, NULL);
 }
 
-inline ErrorCode BDaqAo::SetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
+inline ErrorCode BDaqAo::SetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
 {
    return AdxAoSetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
 
-inline ErrorCode BDaqAo::GetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
+inline ErrorCode BDaqAo::GetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
 {
    return AdxAoGetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }

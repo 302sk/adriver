@@ -112,6 +112,26 @@ typedef struct _MODULE_FUNC_INFO
    FUNC_INFO   funcInfo[MODULE_MAX_FUNC + 1];  
 }MODULE_FUNC_INFO;
 
+#pragma pack(1)
+typedef struct _MODULE_RESOURCE_INFO
+{
+   __u8  module_mode;    //download or application
+   __u8  module_name[10];
+   __u32 module_ver;    //module version
+   __u8  ai_chl_num;
+   __u8  ao_chl_num;
+   __u8  di_chl_num;
+   __u8  do_chl_num;
+}MODULE_RESOURCE_INFO;
+#pragma pack()
+
+typedef struct _MODULE_PROFILE
+{
+   __u8                 module_id;
+   MODULE_RESOURCE_INFO module_resource;
+}MODULE_PROFILE;
+
+
 typedef struct _DEVICE_SHARED
 {
 	__u32	size;   //size of the structure
@@ -128,6 +148,7 @@ typedef struct _DEVICE_SHARED
 	__u8	DioPortDir[DIO_PORT_COUNT];
 	__u8	DoPortState[DIO_PORT_COUNT];
 */
+   MODULE_PROFILE    mdlProfile[5];
    MODULE_FUNC_INFO mdlFuncInfo[MODULE_MAX_COUNT];
    
 	__u32	IsEvtSignaled[KrnlSptedEventCount];

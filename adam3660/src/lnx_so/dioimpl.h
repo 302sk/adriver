@@ -67,6 +67,7 @@ public:
    ErrorCode Reset(uint32 state);
 
 protected:
+     uint32 get_chl_count(uint32 mdlNumber);
 //   ErrorCode PropAccessPortDirection(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
 //   ErrorCode PropAccessDoChlInitState(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
 //   ErrorCode PropAccessPortsDataMask( uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag );
@@ -159,11 +160,26 @@ ErrorCode BDaqDioImpl::PropAccessDoChlInitState(uint32 id, uint32 &bufLen, void 
    }
 }
 */
+
+inline 
+uint32 BDaqDioImpl::get_chl_count(uint32 mdlNumber)
+{
+   int i = 0;
+   for(i = 0; i < MODULE_MAX_COUNT; i++)
+   {
+      if(m_kstubPtr->getShared()->mdlProfile[i].module_id == mdlNumber)
+      {
+         return m_kstubPtr->getShared()->mdlProfile[i].module_resource.ai_chl_num;
+      }
+   }
+   return 0;
+}
+
 inline
 ErrorCode BDaqDioImpl::ReadDiPorts(uint32 mdlNumber, uint32 portStart, uint32 portCount, uint8 buffer[])
 {
    ErrorCode warning = Success;
-   uint32 mdlDiChlCount = m_kstubPtr->getShared()->mdlFuncInfo[mdlNumber].funcInfo[module_func_di].chlCount;
+   uint32 mdlDiChlCount = get_chl_count(mdlNumber);
    if( mdlDiChlCount == 0 )  //there is no ai function on the module
       return ErrorFuncNotSpted;
    if(portStart >= mdlDiChlCount)
@@ -193,7 +209,7 @@ inline
 ErrorCode BDaqDioImpl::WriteDoPorts(uint32 mdlNumber, uint32 portStart, uint32 portCount, uint8 buffer[])
 {
    ErrorCode warning = Success;
-   uint32 mdlDoChlCount = m_kstubPtr->getShared()->mdlFuncInfo[mdlNumber].funcInfo[module_func_do].chlCount;
+   uint32 mdlDoChlCount = get_chl_count(mdlNumber);
    if( mdlDoChlCount == 0 )  //there is no do function on the module
       return ErrorFuncNotSpted;
    if(portStart >= mdlDoChlCount)
@@ -224,7 +240,7 @@ ErrorCode BDaqDioImpl::ReadDoPorts(uint32 mdlNumber, uint32 portStart, uint32 po
 {
    CHK_USER_BUF(buffer);
    ErrorCode warning = Success;
-   uint32 mdlDoChlCount = m_kstubPtr->getShared()->mdlFuncInfo[mdlNumber].funcInfo[module_func_do].chlCount;
+   uint32 mdlDoChlCount = get_chl_count(mdlNumber);
    if( mdlDoChlCount == 0 )  //there is no ai function on the module
       return ErrorFuncNotSpted;
    if(portStart >= mdlDoChlCount)

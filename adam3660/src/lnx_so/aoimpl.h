@@ -185,7 +185,7 @@ ErrorCode BDaqAoImpl::AccessAoValueRange(uint32 mdlNumber, uint32 chStart, uint3
    }
    uint32 chanGain[chCount];
    GetGainCode(chStart, chCount, valueRange, chanGain);
-   AI_SET_CHAN setChan  = { 0, chStart, chCount, chanGain };
+   AI_SET_CHAN setChan  = { 0, chStart, chCount, 1, chanGain };
    
    if(optFlag == 1) //set value range
    {
