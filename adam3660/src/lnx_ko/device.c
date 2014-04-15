@@ -82,7 +82,7 @@ int daq_device_fw_download(daq_device_t *daq_dev, unsigned long arg )
    spin_unlock(&daq_dev->trsc_lock);
 
    uint32 pre = jiffies;
-   ret = daq_event_wait(1, &cur->cmd_event, 1, 200);
+   ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
 //   daq_trace((KERN_ALERT"****wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
 
    if( ret == 0)

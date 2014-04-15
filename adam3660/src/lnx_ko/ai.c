@@ -44,10 +44,8 @@ int daq_ioctl_ai_read_sample( daq_device_t *daq_dev, unsigned long arg )
    daq_trace((KERN_ALERT"****wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
    daq_trace((KERN_ALERT"****cur = %x cur->recv_count = %d\n", cur, cur->recv_count));
 
-   if( evt_ret == 0)
+   if( evt_ret != 0)
    {
-      daq_trace((KERN_ALERT"****pid = %x,  %d ticks/ms go on\n", current->pid, msecs_to_jiffies(1)));
-   }else{      
       daq_trace((KERN_ALERT"****pid = wait until time out\n", current->pid));
       return -EBUSY;
    }
@@ -60,10 +58,7 @@ int daq_ioctl_ai_read_sample( daq_device_t *daq_dev, unsigned long arg )
          && cur->task_list_rcv[i].module_data.channel_rng.stop_chl == chl_rng.stop_chl)
       {
          daq_trace((KERN_ALERT"****Response data are found out!\n"));
-       //  daq_trace((KERN_ALERT"****command type = %x, cmd = %x, len = %d, data[0]=%x, data[7]=%x\n", cur->task_list_rcv[i].module_data.command_type, \
-       //                    cur->task_list_rcv[i].module_data.command, cur->task_list_rcv[i].len, cur->task_list_rcv[i].data[0], cur->task_list_rcv[i].data[7]));
-         if(unlikely(copy_to_user((void *)xbuf.Data, cur->task_list_rcv[i].data, xbuf.LogChanCount * 2)))
-         {
+         if(unlikely(copy_to_user((void *)xbuf.Data, cur->task_list_rcv[i].data, xbuf.LogChanCount * 2))){
             return -EFAULT;
          }else{
             return 0;

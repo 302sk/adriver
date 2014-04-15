@@ -1,0 +1,2 @@
+/mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/adam3660io.ko
+/mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/init.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/spiwrapper.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/fops.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/ai.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/ao.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/dio.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/package.o /mnt/adam3660/embededio/driver/adam3660/src/lnx_ko/device.o
