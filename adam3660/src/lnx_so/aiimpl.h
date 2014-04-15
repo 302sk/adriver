@@ -257,7 +257,6 @@ ErrorCode BDaqAiImpl::ReadSamples(uint32 mdlNumber, uint32 chStart, uint32 chCou
 {
    CHK_USER_BUF(rawData || scaledData);
 
-//   printf("user mode IOCTL_AI_READ_SAMPLES = %x mdlNumber = %x start = %x chCount = %x rawData = %x scaled = %x\n", IOCTL_AI_READ_SAMPLES, mdlNumber, chStart, chCount, rawData, scaledData);
    uint32 rawBuff[AI_CHL_COUNT];
    if (rawData == NULL) {
       rawData = rawBuff;
@@ -281,7 +280,6 @@ ErrorCode BDaqAiImpl::ReadSamples(uint32 mdlNumber, uint32 chStart, uint32 chCou
    // read and scale data
    ErrorCode ret = Success;
    AI_READ_SAMPLES xbuf = { mdlNumber, chStart, chCount, rawData };
-   printf("user mode IOCTL_AI_READ_SAMPLES = %x\n", IOCTL_AI_READ_SAMPLES);
    if (m_kstubPtr->Ioctl(IOCTL_AI_READ_SAMPLES, &xbuf)){
       ret = ErrorDeviceIoTimeOut;
    }

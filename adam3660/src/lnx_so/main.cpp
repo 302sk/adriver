@@ -65,10 +65,10 @@ ErrorCode AdxDeviceGetModuleHandle(BDaqDevice* device, ModuleType type, uint32 i
 }
 
 extern "C"
-ErrorCode AdxDeviceFirmwareUpdate(BDaqDevice* device, uint32 mdlNumber, FILE *fp)
+ErrorCode AdxDeviceFirmwareUpdate(BDaqDevice* device, uint32 mdlNumber, FILE *fp, uint32 type, void (* progress)(int))
 {
 	CHK_USER_BUF(device);
-	return ((BDaqDeviceImpl *)device)->DeviceFirmwareUpdate(mdlNumber, fp);
+	return ((BDaqDeviceImpl *)device)->DeviceFirmwareUpdate(mdlNumber, fp, type, progress);
 }
 
 extern "C"

@@ -57,7 +57,7 @@ public:
    virtual ErrorCode Refresh();
    virtual ErrorCode Reset(uint32 state);
    virtual ErrorCode GetModule(ModuleType type, uint32 index, BDaqModule **module);
-   virtual ErrorCode DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp);
+   virtual ErrorCode DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp, uint32 type, void (*progress)(int));
 
    virtual ErrorCode  ReadPorts(uint32 startAddr, uint32 length, void *buffer)
    {
@@ -174,40 +174,142 @@ static __u16 CalcCheckSum(__u8* data, __u16 len)
 }
 
 inline
-ErrorCode BDaqDeviceImpl::DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp)
+ErrorCode BDaqDeviceImpl::DeviceFirmwareUpdate(uint32 mdlNumber, FILE *fp, uint32 type, void (*progress)(int))
 {
    __u8 data[68];
-   DEVICE_FIRMWARE_DOWNLOAD test;
+   DEVICE_FIRMWARE_DOWNLOAD fw_download;
    __u16 chk_sum = 0;
-   test.mdlNumber = mdlNumber;
-   test.index = 0;
-   test.data = data;
-   test.len = 2;
-   test.cmd = 1;  //start command
+   long total = 0;
+   long current = 0;
+   __u8 start, process, end;
+   //Get the file length
+   fseek(fp, 0L, SEEK_END);
+   total = ftell(fp);
+   fseek(fp, 0L, SEEK_SET);
+
+   if(type == 0){ //mcu firmware download
+      start = 0x1;
+      process = 0x2;
+      end = 0x3;
+   }else if(type == 1){  //ai firmware download
+      start = 0x8;
+      process = 0x9;
+      end = 0xA;
+   }else{
+      return ErrorFuncNotSpted;
+   }
    
-   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 1
+   fw_download.mdlNumber = mdlNumber;
+   fw_download.index = 0;
+   fw_download.data = data;
+   fw_download.len = 2;
+   fw_download.cmd = start;  //start command
+   
+   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download); //start 1
    usleep(4000000);
-   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test); //start 2
+   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download); //start 2 reset
    usleep(4000000);
 
-   test.index = 1;
-   test.cmd = 2;
+   fw_download.index = 1;
+   fw_download.cmd = process;
    while(!feof(fp))
    {
-      test.len = fread(data, 1, 64, fp);
-      chk_sum += CalcCheckSum(data, test.len);
+      fw_download.len = fread(data, 1, 64, fp);
+      chk_sum += CalcCheckSum(data, fw_download.len);
       if(feof(fp))
       {
-         test.index |= 0x8000;
-         *(__u16 *)(&data[test.len]) = chk_sum;
-         test.len += 2;
+         fw_download.index |= 0x8000;
+         *(__u16 *)(&data[fw_download.len]) = chk_sum;
+         fw_download.len += 2;
       }
-      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test);  //dwonload
-      test.index ++;
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download);  //dwonload
+      if(type == 1){
+         usleep(200000);
+      }
+      fw_download.index ++;
+      current = ftell(fp);
+      (*progress)(int(((float)current/total)*100));
    }
-   test.cmd = 3; //reset
-   test.index = 0;
-   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &test);    //reset
+   fw_download.cmd = end; //reset
+   fw_download.index = 0;
+   m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download);    //reset
+
+   
+#if 0  
+   if(type == 0){
+      fw_download.index = 0;
+      fw_download.data = data;
+      fw_download.len = 2;
+      fw_download.cmd = 1;  //start command
+      
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download); //start 1
+      usleep(4000000);
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download); //start 2
+      usleep(4000000);
+
+      fw_download.index = 1;
+      fw_download.cmd = 2;
+      while(!feof(fp))
+      {
+         fw_download.len = fread(data, 1, 64, fp);
+         chk_sum += CalcCheckSum(data, fw_download.len);
+         if(feof(fp))
+         {
+            fw_download.index |= 0x8000;
+            *(__u16 *)(&data[fw_download.len]) = chk_sum;
+            fw_download.len += 2;
+         }
+         m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download);  //dwonload
+         fw_download.index ++;
+         current = ftell(fp);
+         (*progress)(int(((float)current/total)*100));
+      }
+      fw_download.cmd = 3; //reset
+      fw_download.index = 0;
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download);    //reset
+   }else if(type == 1){
+   
+      fw_download.index = 0;
+      fw_download.data = data;
+      fw_download.len = 2;
+      fw_download.cmd = 8;  //start command
+      
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download); //start 1
+      usleep(4000000);
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download); //start 2
+      usleep(4000000);
+
+      fw_download.index = 1;
+      fw_download.cmd = 9;
+      while(!feof(fp))
+      {
+         fw_download.len = fread(data, 1, 64, fp);
+         chk_sum += CalcCheckSum(data, fw_download.len);
+         if(feof(fp))
+         {
+            fw_download.index |= 0x8000;
+            *(__u16 *)(&data[fw_download.len]) = chk_sum;
+            fw_download.len += 2;
+         }
+         m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download);  //dwonload
+         usleep(200000);
+         fw_download.index ++;
+         current = ftell(fp);
+         (*progress)(int(((float)current/total)*100));
+      }
+      fw_download.cmd = 0xa; //reset
+      fw_download.index = 0;
+      m_kstub.Ioctl(IOCTL_DEVICE_FIRMWARE_DOWNLOAD, &fw_download);    //reset
+
+
+
+   
+      
+   }else{
+      return ErrorFuncNotSpted;
+   }  
+#endif
+   
    return Success;
 }
 

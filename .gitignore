@@ -1,0 +1,5 @@
+#ignore bin file
+*.bin
+*.so
+*.ko
+*.o

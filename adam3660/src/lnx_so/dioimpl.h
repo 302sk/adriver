@@ -67,7 +67,8 @@ public:
    ErrorCode Reset(uint32 state);
 
 protected:
-     uint32 get_chl_count(uint32 mdlNumber);
+     uint32 get_di_count(uint32 mdlNumber);
+     uint32 get_do_count(uint32 mdlNumber);
 //   ErrorCode PropAccessPortDirection(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
 //   ErrorCode PropAccessDoChlInitState(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
 //   ErrorCode PropAccessPortsDataMask( uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag );
@@ -162,24 +163,39 @@ ErrorCode BDaqDioImpl::PropAccessDoChlInitState(uint32 id, uint32 &bufLen, void 
 */
 
 inline 
-uint32 BDaqDioImpl::get_chl_count(uint32 mdlNumber)
+uint32 BDaqDioImpl::get_di_count(uint32 mdlNumber)
 {
    int i = 0;
    for(i = 0; i < MODULE_MAX_COUNT; i++)
    {
       if(m_kstubPtr->getShared()->mdlProfile[i].module_id == mdlNumber)
       {
-         return m_kstubPtr->getShared()->mdlProfile[i].module_resource.ai_chl_num;
+         return m_kstubPtr->getShared()->mdlProfile[i].module_resource.di_chl_num;
       }
    }
    return 0;
 }
 
+inline 
+uint32 BDaqDioImpl::get_do_count(uint32 mdlNumber)
+{
+   int i = 0;
+   for(i = 0; i < MODULE_MAX_COUNT; i++)
+   {
+      if(m_kstubPtr->getShared()->mdlProfile[i].module_id == mdlNumber)
+      {
+         return m_kstubPtr->getShared()->mdlProfile[i].module_resource.do_chl_num;
+      }
+   }
+   return 0;
+}
+
+
 inline
 ErrorCode BDaqDioImpl::ReadDiPorts(uint32 mdlNumber, uint32 portStart, uint32 portCount, uint8 buffer[])
 {
    ErrorCode warning = Success;
-   uint32 mdlDiChlCount = get_chl_count(mdlNumber);
+   uint32 mdlDiChlCount = get_di_count(mdlNumber);
    if( mdlDiChlCount == 0 )  //there is no ai function on the module
       return ErrorFuncNotSpted;
    if(portStart >= mdlDiChlCount)
@@ -197,7 +213,6 @@ ErrorCode BDaqDioImpl::ReadDiPorts(uint32 mdlNumber, uint32 portStart, uint32 po
       SET_WARN(warning, WarningParamOutOfRange );
    }
    
-   printf("user mode: DIO read DI ports\n");
    DIO_RW_PORTS xbuf = { mdlNumber, portStart, portCount, buffer };
    if (m_kstubPtr->Ioctl(IOCTL_DIO_READ_DI_PORTS, &xbuf)){
       return ErrorDeviceIoTimeOut;
@@ -209,7 +224,7 @@ inline
 ErrorCode BDaqDioImpl::WriteDoPorts(uint32 mdlNumber, uint32 portStart, uint32 portCount, uint8 buffer[])
 {
    ErrorCode warning = Success;
-   uint32 mdlDoChlCount = get_chl_count(mdlNumber);
+   uint32 mdlDoChlCount = get_do_count(mdlNumber);
    if( mdlDoChlCount == 0 )  //there is no do function on the module
       return ErrorFuncNotSpted;
    if(portStart >= mdlDoChlCount)
@@ -227,7 +242,6 @@ ErrorCode BDaqDioImpl::WriteDoPorts(uint32 mdlNumber, uint32 portStart, uint32 p
       SET_WARN(warning, WarningParamOutOfRange );
    }
 
-   printf("user mode: DIO write DO ports\n");
    DIO_RW_PORTS xbuf = { mdlNumber, portStart, portCount, buffer };
    if (m_kstubPtr->Ioctl(IOCTL_DIO_WRITE_DO_PORTS, &xbuf)){
       return ErrorDeviceIoTimeOut;
@@ -240,7 +254,7 @@ ErrorCode BDaqDioImpl::ReadDoPorts(uint32 mdlNumber, uint32 portStart, uint32 po
 {
    CHK_USER_BUF(buffer);
    ErrorCode warning = Success;
-   uint32 mdlDoChlCount = get_chl_count(mdlNumber);
+   uint32 mdlDoChlCount = get_do_count(mdlNumber);
    if( mdlDoChlCount == 0 )  //there is no ai function on the module
       return ErrorFuncNotSpted;
    if(portStart >= mdlDoChlCount)
@@ -258,7 +272,6 @@ ErrorCode BDaqDioImpl::ReadDoPorts(uint32 mdlNumber, uint32 portStart, uint32 po
       SET_WARN(warning, WarningParamOutOfRange );
    }
 
-   printf("user mode: DIO read DO ports\n");
    DIO_RW_PORTS xbuf = { mdlNumber, portStart, portCount, buffer };
    if (m_kstubPtr->Ioctl(IOCTL_DIO_READ_DO_PORTS, &xbuf)){
      return ErrorDeviceIoTimeOut;

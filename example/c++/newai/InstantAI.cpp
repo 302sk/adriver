@@ -36,7 +36,7 @@ $NoKeywords:  $
 #include <stdio.h>
 #include "../inc/compatibility.h"
 //#include "../../../inc/bdaqctrl.h"
-#include "bdaqcl.h"
+#include "../inc/bdaqcl.h"
 using namespace Automation::BDaq;
 //-----------------------------------------------------------------------------------
 // Configure the following three parameters before running the example
@@ -44,7 +44,7 @@ using namespace Automation::BDaq;
 #define      deviceDescription  L"DemoDevice,BID#0"
 #define         deviceNumber    0
 int32        startChannel = 0;
-const int32  channelCount = 3;
+const int32  channelCount = 8;
 int32	startPort = 0;
 const int32	portCount = 8;
 
@@ -67,7 +67,8 @@ int main(int argc, char* argv[])
    //InstantAiCtrl * instantAiCtrl = AdxInstantAiCtrlCreate();
    ret = BDaqDevice::Open(deviceNumber, ModeWrite, device);
     printf("2. device = %x ret = %x\n", device, ret);
-    FILE *fp = fopen("ADAM3660M4_V18.bin","r");
+//    FILE *fp = fopen("ADAM3660M4_V18.bin","r");
+	 FILE *fp = fopen("ADUC7061ForADAM3660_13_Utility.bin","r");
    do
    {
       // Step 2: Select a device by device number or device description and specify the access mode.
@@ -85,24 +86,25 @@ int main(int argc, char* argv[])
       printf("Acquisition is in progress, any key to quit!\n\n");
       double   scaledData[channelCount] = {0};//the count of elements in this array should not be less than the value of the variable channelCount
       int16		rawData[channelCount] = {0};
-      BYTE		dioData[ 1 ] = {0xcc};
+      BYTE		dioData[ 1 ] = {0xff};
       BYTE		rngCode[channelCount] = {0};
       int32 channelCountMax = 4;//instantAiCtrl->getFeatures()->getChannelCountMax();
 
       do
       {
          //read samples and save to buffer 'scaledData'.
-        // ret = ai->Read(1,startChannel,channelCount,rawData, scaledData);
-     //   memset(rngCode, 0x55, channelCount);
-     //   	ret = ai->SetValueRange(1, startChannel, channelCount, rngCode);
+      //   ret = ai->Read(1,startChannel,channelCount,rawData, scaledData);
+   //     memset(rngCode, 0x1, channelCount);
+      //  	ret = ai->SetValueRange(1, startChannel, channelCount, rngCode);
      //   	memset(rngCode, 0, channelCount);
      //      ret = ai->GetValueRange(1, startChannel, channelCount, rngCode);
    		// ret = ao->Write( startChannel, channelCount, rawData);
    		// ret = dio->DiRead(1,startPort, portCount, dioData);
    		// printf("dio value: %x\n", dioData[0]);
+   		dioData[0] = 0xaa;
    		// ret = dio->DoWrite(1, startPort, portCount, dioData);
-   		// memset(dioData, 0, 1);
-   		  ret = dio->DoRead(1, startPort, portCount, dioData);
+   		 memset(dioData, 0, 1);
+   		//  ret = dio->DoRead(1, startPort, portCount, dioData);
    		  printf("dio value: %x\n", dioData[0]);
     //     printf("++++++++++++\n");
 
@@ -113,14 +115,14 @@ int main(int argc, char* argv[])
 			}else{
 	//			printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ fp = %x\n", fp);
 			}
-    //		ret = device->UpdateFirmware(1, fp);
-   //			break;
+    		ret = device->UpdateFirmware(1, fp, 1);
+   			break;
          CHK_RESULT(ret);
 
          // process the acquired data. only show data here.
          for (int32 i = startChannel; i< startChannel+channelCount;++i)
          {
-            printf("Channel %d data: %x\n", i % channelCountMax, rawData[i-startChannel]);
+           // printf("Channel %d data: %x\n", i % channelCountMax, rawData[i-startChannel]);
             printf("Channel %d rangecode: %x\n", i%channelCountMax, rngCode[i-startChannel]);
          }
          printf("\n");
