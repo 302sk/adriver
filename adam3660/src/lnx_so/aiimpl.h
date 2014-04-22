@@ -22,6 +22,8 @@ VRG_INFO const s_aiVrgInfoTable[] = {
    { V_Neg5To5,         1, -5,      5,    V_Neg5To5_String },
    { V_Neg2pt5To2pt5,   2, -2.5,    2.5,  V_Neg2pt5To2pt5_String },
    { V_Neg1pt25To1pt25, 3, -1.25,   1.25, V_Neg1pt25To1pt25_String },
+   { mA_0To20,          4, 0,       20,   mA_0To20_String },
+   { mA_4To20,          5, 4,       20,   mA_4To20_String },
 };
 
 // AI supported events
@@ -41,10 +43,6 @@ public:
    virtual ModuleType getType()   {  return DaqAi; }
    virtual int32      getNumber() {  return 0;   }
    virtual AccessMode getMode()   {  return m_kstubPtr->getMode(); }
-
-//   virtual ErrorCode EventGetHandle(EventId id, HANDLE &handle);
-//   virtual ErrorCode EventGetStatus(EventId id, uint32 *lParam, uint32 *rParam);
-//   virtual ErrorCode EventClearFlag(EventId id, uint32 lParam, uint32 rParam);
 
    // Property table
    BEGIN_PROPERTY_TABLE(BDaqAiImpl, PropAccess)
@@ -71,8 +69,6 @@ public:
    // BDaqAi interface implementation
    // --------------------------------------------------------------
    virtual ErrorCode ReadSamples(uint32 mdlNumber, uint32 chStart, uint32 chCount, void *rawData, double *scaledData);
-   virtual ErrorCode AccessAiValueRange(uint32 mdlNumber, uint32 chStart, uint32 chCount, void *valueRange, uint32 optFlag);
-//   virtual ErrorCode 
 
 public:
    // --------------------------------------------------------------
@@ -92,37 +88,19 @@ public:
 
    ErrorCode Initialize(BioKrnlStub *kstub);
    ErrorCode Reset(uint32 state);
-
+   ErrorCode AccessAiValueRange(uint32 mdlNumber, uint32 chStart, uint32 chCount, void *valueRange, uint32 optFlag);
+   ErrorCode Calibrate(uint32 mdlNumber, uint32 caliType);
    void RefreshChanSetting();
 
 protected:
    ErrorCode PropAccessFeatVrgTypeList(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
    ErrorCode PropAccessChanCount(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
-//   ErrorCode PropAccessChanVrgType(uint32 id, uint32 &bufLen, void *buffer, uint32 opFlag);
-
-
-protected:
-   uint32 get_chl_count(uint32 mdlNumber);
+   uint32    get_chl_count(uint32 mdlNumber);
    ErrorCode GetGainCode(uint32 chStart, uint32 chCount, void *valueRange, void *gainCode);
    ErrorCode GetValuleRange(uint32 gain, uint32 &valueRange);
-//   ErrorCode CheckUserChanCnntType(uint32 * types, uint32 count);
-//   ErrorCode CheckUserChanVrgType(uint32 * types, uint32 count);
-
-//   ErrorCode SetChanCnntType(uint32 phyStart, uint32 phyCount, uint32 types[]);
-//   ErrorCode SetChanVrgType(uint32 phyStart, uint32 phyCount, uint32 types[]);
-//   ErrorCode SetChanConfig(uint32 phyStart, uint32 phyCount, uint8 types[], uint8 gains[]);
-
 
 private:
    BioKrnlStub     *m_kstubPtr;
-
-   // AI channel setting(value range info)
-//   LIST_ENTRY      m_scaleListHead;                // AI scale table: each value range has an entry in the table.
-//   uint32          m_nextCustomizedVrgCode;        // AI customized value range code
-//   PSCALING_ENTRY  m_phyChanVrg[AI_CHL_COUNT];     // AI channel value range information for each "Physical" channel.
-
-   // FAI
-//   HANDLE          m_aiEvents[ARRAY_SIZE(s_aiSptedEvts)];
 };
 
 // -----------------------------------------------------------------------------------------
@@ -187,6 +165,22 @@ ErrorCode BDaqAiImpl::GetValuleRange(uint32 gain, uint32 &valueRange)
       }
    }
    return ErrorPropNotSpted;
+}
+
+inline 
+ErrorCode BDaqAiImpl::Calibrate(uint32 mdlNumber, uint32 caliType)
+{
+   AI_CALI_CMD caliCmd;
+   caliCmd.mdlNumber = mdlNumber;
+   caliCmd.caliType = (unsigned char)caliType;
+   caliCmd.getResult = 0;  //send command
+   if(m_kstubPtr->Ioctl(IOCTL_AI_CALIBRATE, &caliCmd))
+      return ErrorDeviceIoTimeOut;
+
+   caliCmd.getResult = 1; //get result
+   if(m_kstubPtr->Ioctl(IOCTL_AI_CALIBRATE, &caliCmd))
+      return ErrorDeviceIoTimeOut;
+   return Success;
 }
 
 inline

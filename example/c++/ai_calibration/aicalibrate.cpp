@@ -15,16 +15,18 @@
 /******************************************************************************
  *
  * Linux Example:
- *    firmware-update.cpp
+ *    aicalibrate.cpp
  *
  * Example Category:
- *    firmware download 
+ *    AI
  *
  * Description:
- *    This example demonstrates how to use firmware download function.
+ *    This example demonstrates how to use 
  *
  * Instructions for Running:
  *    1. Set the 'deviceNumber' for opening the device.
+ *    2. Set the 'startChannel' as the first channel for scan analog samples
+ *    3. Set the 'channelCount' to decide how many sequential channels to scan analog samples.
  *
  * I/O Connections Overview:
  *    Please refer to your hardware reference manual.
@@ -39,55 +41,53 @@ using namespace Automation::BDaq;
 // Configure the following three parameters before running the example
 //-----------------------------------------------------------------------------------
 #define         deviceNumber    0
-#define			moduleNumber	2	
-void show_progress(int progress)
+#define		moduleNumber	1
+int32        startChannel = 0;
+const int32  channelCount = 8;
+
+const int32  channelCountMax = 8;
+
+inline void waitAnyKey()
 {
-	if(progress == 0){
-		fprintf(stderr, "Preparing...\r");
-	}else{
-		fprintf(stderr, "Updating %d completed\r", progress);
-	}
-}
+	do{SLEEP(1);} while(!kbhit());
+} 
 int main(int argc, char* argv[])
 {
 	ErrorCode        ret = Success;
-	long		target = 0;
-	PROGRESS_CALLBACK process = show_progress;
-	
-	if(argc < 3){
-		printf("Please input the Target and File name\n");
-		printf("Example: firmwaredownload ai abc.bin\n");
-		return 0;
-	}
-	if(!strcmp(argv[1], "ai")){
-		target = AI_FIRM_WARE;
-	}else if(!strcmp(argv[1], "mcu")){
-		target = M4_FIRM_WARE;
-	}else{
-		printf("Target is invalid, it should be \"ai\" or \"mcu\"\n");
-		printf("Example: firmwaredownload ai abc.bin\n");
-		return 0;
-	}
+
 	BDaqDevice *device = NULL;
-	//Open device with deviceNumber
+	BDaqAi *ai = NULL;
+	//Open device
 	ret = BDaqDevice::Open(deviceNumber, ModeWrite, device);
-	//Open bin file to download
-	FILE *fp = fopen(argv[2],"r");
-	if(fp == NULL){
-		printf("Failed to open file!\n");
-		return 0;
-	}
-	//Update firmware
-	ret = device->UpdateFirmware(moduleNumber, fp, target, process);
+	do
+	{
+		//Get ai module
+		ret = device->GetModule(0, ai);
+		CHK_RESULT(ret);
+
+		printf("Please input 0v to channel 0 then press enter to start zero calibration!\n");
+		getchar();
+		ret = ai->Calibrate(moduleNumber, ZeroCalibration);
+		CHK_RESULT(ret);
+		
+		printf("Please input 5v to channel 0 then press enter to start span calibration!\n");
+		getchar();
+		ret = ai->Calibrate(moduleNumber, SpanCalibration);
+		CHK_RESULT(ret);
+
+	}while(false);
+
 	//Close device and release any allocated resource.
-	if(device != NULL){
+	if(device != NULL)
+	{
 		device->Close();
 	}
 	// If something wrong in this execution, print the error code on screen for tracking.
-	if(BioFailed(ret)){
+	if(BioFailed(ret))
+	{
 		printf("Some error occurred. And the last error code is Ox%X.\n", ret);
+		waitAnyKey();// wait any key to quit!
 	}
-	fclose(fp);
 	return 0;
 }
 

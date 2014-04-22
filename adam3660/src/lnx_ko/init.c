@@ -6,6 +6,8 @@
 #include <linux/err.h>
 #include <linux/string.h>
 #include <linux/kthread.h>
+#include <linux/hrtimer.h>
+#include <linux/ktime.h>
 
 #include "kdriver.h"
 #include "kshared.h"
@@ -29,6 +31,12 @@ MODULE_DESCRIPTION("Adam3660 IO Driver base on SPI bus.");
 #define next_transaction(cur) (cur==0 ? 1 : 0)
 
 static daq_device_t *g_daq_dev;
+struct daq_dev_timer{
+   daq_device_t *daq_dev_t;
+   ktime_t  ktime;
+   struct hrtimer hr_timer;
+};
+static struct daq_dev_timer snd_timer;
  
 #define SPI_SND "/dev/spidev1.0"
 #define SPI_RCV "/dev/spidev2.0"
@@ -41,9 +49,15 @@ static struct file_operations daq_fops = {
 	.unlocked_ioctl	= daq_file_ioctl,
 };
 #if 1
-static int snd_thread(void *arg)
+//static int snd_thread(void *arg)
+enum hrtimer_restart snd_thread( struct hrtimer *timer )
 {
-   daq_device_t *daq_dev = (daq_device_t *)arg;
+   //daq_device_t *daq_dev = (daq_device_t *)arg;
+   struct daq_dev_timer *abc = container_of(timer, struct daq_dev_timer, hr_timer);
+   daq_device_t *daq_dev = abc->daq_dev_t;
+   ktime_t period_time = abc->ktime;
+   ktime_t kt_now;
+   
    daq_spi_transaction_t *cur;
    SPI_PACKAGE pkg;
    __u8 data[256];
@@ -56,18 +70,17 @@ static int snd_thread(void *arg)
    pkg.offset = 0;
    pkg.data = data;
    
-   while(!kthread_should_stop())
-   {
+//   while(!kthread_should_stop())
+//   {
       memset((__u8*)pkg.data, 0, 256);
       pkg.len = 256;
       pkg.offset = 0;
       
       cur = &(daq_dev->spi_transaction[daq_dev->curr_trsc]);
-      //task list isn't empty, fire
+      //task list isn't empty, process
       if( cur->task_count > 0) 
       {
          __u8 proc_mask = 0;
-//         printk(KERN_ALERT"++++task_count = %d current transcation: %d\n", cur->task_count, daq_dev->curr_trsc);
          for(i=0; i < cur->task_count; i++)
          {
 //            daq_trace((KERN_ALERT"++++module_id = %d, type = %x, cmd = %x, chl_rng = %x\n",cur->task_list[i].module_id, \
@@ -104,16 +117,13 @@ static int snd_thread(void *arg)
 
          if(head_info->command != header_com_search)
          {
-            /////////////////////////////////////////////////////////
             for(i = 0; i < cur->task_count; i++)           
             {
                int j = 0;
                int module_len = 0;
                if((head_info->command == header_com_download) && (cur->task_list[i].header_cmd != header_com_download)) //if there is a task with "download", skip those which is without "download"
                   continue;
-               if(cur->task_list[i].module_id == 0)  //invalid id
-                  continue;
-               if(((1 << cur->task_list[i].module_id) & proc_mask)) //had been processed
+               if(((1 << cur->task_list[i].module_id) & proc_mask)) //have been processed already
                   continue;
                MODULE_INFO *module_info = add_module_info(&pkg, cur->task_list[i].module_id, 0);
                proc_mask |= (1 << cur->task_list[i].module_id); //record processed id
@@ -169,13 +179,17 @@ static int snd_thread(void *arg)
          }
       }
 
-      SLEEP_MILLI_SEC(10);
+//      SLEEP_MILLI_SEC(10);
 //         struct timespec sleep;
 //         sleep.tv_sec = 0;
 //         sleep.tv_nsec = 500000;
 //         nanosleep(CLOCK_REALTIME, 0, &sleep, NULL);
 
-   }
+//   }
+   kt_now = hrtimer_cb_get_time(timer);
+   hrtimer_forward(timer, kt_now, period_time);
+ //  printk(KERN_ALERT"High resolution timer test\n");
+   return HRTIMER_RESTART;
 }
 
 static int rcv_thread(void *arg)
@@ -297,6 +311,7 @@ static int __init daq_driver_init( void )
 	struct device	*sysfs_dev;
 	size_t		mem_size;
 	int		ret;
+   
 
 #define CHK_RESULT(_ok_, err, err_label) if(!(_ok_)) { ret = err; goto err_label; }
 	// allocate private data structure
@@ -337,12 +352,18 @@ static int __init daq_driver_init( void )
    {
       daq_trace((KERN_ALERT"Create spi receive thread failed!\n"));
    }
+   snd_timer.ktime = ktime_set( 0, 2000000L ); //delay 500us
+   snd_timer.daq_dev_t = daq_dev;
+   hrtimer_init( &snd_timer.hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL );
+   snd_timer.hr_timer.function = &snd_thread;
+   hrtimer_start( &snd_timer.hr_timer, snd_timer.ktime, HRTIMER_MODE_REL);
+   /*
    daq_dev->spi_snd_thrd = kthread_run(snd_thread, (void *)daq_dev, "spi_snd");
    if(daq_dev->spi_snd_thrd == NULL)
    {
       daq_trace((KERN_ALERT"Create spi send thread failed\n"));
    }
-
+*/
 	INIT_LIST_HEAD( &daq_dev->file_ctx_list);
 	daq_dev->file_ctx_pool_size = (mem_size - sizeof(daq_device_t)) / sizeof(daq_file_ctx_t);
 	if( daq_dev->file_ctx_pool_size){
@@ -402,8 +423,11 @@ static void __exit daq_driver_exit( void )
    daq_event_close(g_daq_dev->spi_transaction[1].cmd_event);
    daq_event_close(g_daq_dev->spi_transaction[1].rsp_event);
 
+   
+   hrtimer_cancel( &snd_timer.hr_timer );
    if(g_daq_dev->spi_rcv_thrd != NULL)  //stop spi receive thread
    {
+      daq_device_search(g_daq_dev, 0);  //search device for stopping rcv thread
       kthread_stop(g_daq_dev->spi_rcv_thrd);
       g_daq_dev->spi_rcv_thrd = NULL;
    }

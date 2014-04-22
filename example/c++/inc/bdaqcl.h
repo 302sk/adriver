@@ -17,7 +17,14 @@ typedef short  int16;
 #define  M4_FIRM_WARE   0
 #define  AI_FIRM_WARE   1
 
-typedef void (*PROGRESS_CALLBACK)(int);
+typedef void (*PROGRESS_CALLBACK)(int); //firmware download call back function
+
+typedef struct _IO_MODULE_INFO  //IO module infor struct
+{
+   char  module_id;
+   char  module_name[10];
+}IO_MODULE_INFO;
+
 
 #ifdef __cplusplus
 #include <map>
@@ -91,6 +98,14 @@ typedef enum tagAiChannelType {
    AllSeDiffAdj,
    MixedSeDiffAdj,
 } AiChannelType;
+
+typedef enum tagAiCalibrationType{
+   SaveCaliValToFlash = 0x01,
+   WriteUserCaliValToFac,
+   WriteFacCaliValToUser,
+   ZeroCalibration = 0x55,
+   SpanCalibration = 0xaa,
+}AiCalibrationType;
 
 typedef enum tagAiSignalType {
    SingleEnded = 0,
@@ -1339,12 +1354,11 @@ struct BDaqLib
    ErrorCode ( *pfnDeviceGetModuleHandle)(HANDLE,long,long,HANDLE*);
    ErrorCode ( *pfnDeviceRefreshProperties)(HANDLE);
    ErrorCode ( *pfnDeviceFirmwareUpdate)(HANDLE, long, FILE*, long, PROGRESS_CALLBACK);
-   //ErrorCode ( *pfnDeviceDownloadFirmware)(long, FILE*, void*);
-   //ErrorCode ( *pfnDeviceSearchModule)(Module_INFO *);
-//   ErrorCode (  *pfnDeviceShowConfigDialogBox)(HANDLE,HWND,RECT*,long,BOOL,HWND*);
+   ErrorCode ( *pfnDeviceIoModuleSearch)(HANDLE, IO_MODULE_INFO*, long, long*);
    // Analog input APIs
    ErrorCode ( *pfnAiReadSamples)(HANDLE,long,long,long,void*,double*);
    ErrorCode ( *pfnAiAccessValueRange)(HANDLE,long,long,long,void*,long);
+   ErrorCode ( *pfnAiCalibrate)(HANDLE,long,long);
    ErrorCode ( *pfnBufferedAiPrepare)(HANDLE,long,void**);
    ErrorCode ( *pfnBufferedAiRunOnce)(HANDLE,BOOL);
    ErrorCode ( *pfnBufferedAiRun)(HANDLE);
@@ -1417,11 +1431,13 @@ __inline BOOL InitializeBioDaqLibray(BDaqLib *bdaqLib)
 				( *(void **)&bdaqLib->pfnDeviceGetModuleHandle          = dlsym(bdaqLib->instHandle, "AdxDeviceGetModuleHandle"));
 				( *(void **)&bdaqLib->pfnDeviceRefreshProperties        = dlsym(bdaqLib->instHandle, "AdxDeviceRefreshProperties"));
             ( *(void **)&bdaqLib->pfnDeviceFirmwareUpdate           = dlsym(bdaqLib->instHandle, "AdxDeviceFirmwareUpdate"));
+            ( *(void **)&bdaqLib->pfnDeviceIoModuleSearch           = dlsym(bdaqLib->instHandle, "AdxDeviceIoModuleSearch"));
             
 				//( bdaqLib->pfnDeviceShowConfigDialogBox      = dlsym(bdaqLib->instHandle, L"AdxDeviceShowConfigDialogBox"));
 				//AI apis
 				( *(void **)&bdaqLib->pfnAiReadSamples                  = dlsym(bdaqLib->instHandle, "AdxAiReadSamples"));
             ( *(void **)&bdaqLib->pfnAiAccessValueRange             = dlsym(bdaqLib->instHandle, "AdxAiAccessValueRange")); 
+            ( *(void **)&bdaqLib->pfnAiCalibrate                    = dlsym(bdaqLib->instHandle, "AdxAiCalibrate"));
 				//( *(void **)&bdaqLib->pfnBufferedAiPrepare              = dlsym(bdaqLib->instHandle, "AdxBufferedAiPrepare"));
 				//( *(void **)&bdaqLib->pfnBufferedAiRunOnce              = dlsym(bdaqLib->instHandle, "AdxBufferedAiRunOnce"));
 				//( *(void **)&bdaqLib->pfnBufferedAiRun                  = dlsym(bdaqLib->instHandle, "AdxBufferedAiRun"));
@@ -1623,6 +1639,16 @@ __inline ErrorCode   AdxDeviceFirmwareUpdate(
 {
    return GetBDaqLib()->pfnDeviceFirmwareUpdate(deviceHandle, mdlNumber, fp, type, progress);
 }
+
+__inline ErrorCode   AdxDeviceIoModuleSearch(
+   IN HANDLE            deviceHandle,
+   IN IO_MODULE_INFO*   modulesInfo,
+   IN long              count,
+   IN long*             actualCnt)
+{
+   return GetBDaqLib()->pfnDeviceIoModuleSearch(deviceHandle, modulesInfo, count, actualCnt);
+}
+
 /*
 __inline ErrorCode   AdxDeviceShowConfigDialogBox(
    IN HANDLE deviceHandle, 
@@ -1647,6 +1673,14 @@ __inline ErrorCode   AdxAiReadSamples(
    OUT OPTIONAL double* scaledData)
 {
    return GetBDaqLib()->pfnAiReadSamples(aiHandle, mdlNumber, channelStart, channelCount, rawData, scaledData);
+}
+
+__inline ErrorCode AdxAiCalibrate(
+   IN HANDLE            aiHandle,
+   IN long              mdlNumber,
+   IN long              caliType)
+{
+   return GetBDaqLib()->pfnAiCalibrate(aiHandle, mdlNumber, caliType);
 }
 __inline ErrorCode   AdxAiSetValueRange(
    IN HANDLE            aiHandle,
@@ -2138,6 +2172,7 @@ public:
 
    ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
    ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
+   ErrorCode Calibrate(long mdlNumber, long caliType);
    // buffered AI methods
    ErrorCode BfdAiPrepare(long dataCount, void* * dataRaw);
    ErrorCode BfdAiRunOnce(bool asynchronous);
@@ -2288,6 +2323,7 @@ public:
 
    ErrorCode RefreshProperties();
    ErrorCode UpdateFirmware(long mdlNumber, FILE *fp, long type, PROGRESS_CALLBACK progress);
+   ErrorCode SearchIoModules(IO_MODULE_INFO* modulesInfo, long count, long *actualCnt);
 /*   
    ErrorCode ShowModalDialog(HWND parentWnd, long dataSource);
    ErrorCode ShowPopupDialog(HWND parentWnd, long dataSource, HWND* dlgWnd);
@@ -2532,6 +2568,11 @@ inline ErrorCode BDaqAi::SetValueRange(long mdlNumber,long chStart,long chCount,
 inline ErrorCode BDaqAi::GetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
 {
    return AdxAiGetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
+}
+
+inline ErrorCode BDaqAi::Calibrate(long mdlNumber, long caliType)
+{
+   return AdxAiCalibrate(get_Handle(), mdlNumber, caliType);
 }
 
 
@@ -2921,6 +2962,11 @@ inline ErrorCode BDaqDevice::RefreshProperties()
 inline ErrorCode BDaqDevice::UpdateFirmware(long mdlNumber, FILE * fp, long type, PROGRESS_CALLBACK progress)
 {
    return AdxDeviceFirmwareUpdate(get_Handle(), mdlNumber, fp, type, progress);
+}
+
+inline ErrorCode BDaqDevice::SearchIoModules(IO_MODULE_INFO* modulesInfo, long count, long* actualCnt)
+{
+   return AdxDeviceIoModuleSearch(get_Handle(), modulesInfo, count, actualCnt);
 }
 /*
 inline ErrorCode BDaqDevice::ShowModalDialog(HWND parentWnd, long dataSource)

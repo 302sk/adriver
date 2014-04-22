@@ -72,6 +72,13 @@ ErrorCode AdxDeviceFirmwareUpdate(BDaqDevice* device, uint32 mdlNumber, FILE *fp
 }
 
 extern "C"
+ErrorCode AdxDeviceIoModuleSearch(BDaqDevice* device, IO_MODULE_INFO *modulesInfo, uint32 count, uint32* actualCnt)
+{
+	CHK_USER_BUF(device);
+	return ((BDaqDeviceImpl *)device)->DeviceSearch(modulesInfo, count, actualCnt);
+}
+
+extern "C"
 ErrorCode AdxDeviceClose(BDaqDevice* device)
 {
 	CHK_USER_BUF(device);
@@ -85,6 +92,13 @@ ErrorCode AdxDeviceRefreshProperties(BDaqDevice* device)
 {
 	CHK_USER_BUF(device);
 	return ((BDaqDeviceImpl *)device)->Refresh();
+}
+
+extern "C"
+ErrorCode AdxAiCalibrate(BDaqAi* ai, uint32 mdlNumber, uint32 caliType)
+{
+	CHK_USER_BUF(ai);
+	return ((BDaqAiImpl *)ai)->Calibrate(mdlNumber, caliType);
 }
 
 extern "C"

@@ -24,8 +24,10 @@ __attribute__((section("__versions"))) = {
 	{ 0x5487b746, "mem_map" },
 	{ 0x67c2fa54, "__copy_to_user" },
 	{ 0x3c4f3e84, "dev_set_drvdata" },
+	{ 0xc03b3986, "hrtimer_forward" },
 	{ 0x9574fa8c, "daq_class_get" },
 	{ 0xc5ae0182, "malloc_sizes" },
+	{ 0x96091af1, "hrtimer_cancel" },
 	{ 0x1958c905, "__rt_mutex_init" },
 	{ 0x4d6859a3, "device_destroy" },
 	{ 0x353e3fa5, "__get_user_4" },
@@ -52,14 +54,15 @@ __attribute__((section("__versions"))) = {
 	{ 0x8836fca7, "kmem_cache_alloc" },
 	{ 0xbc10dd97, "__put_user_4" },
 	{ 0x3bd1b1f6, "msecs_to_jiffies" },
-	{ 0xd62c833f, "schedule_timeout" },
 	{ 0x4b63b01f, "daq_event_reset" },
+	{ 0x984ff93a, "hrtimer_start" },
 	{ 0xa94dfcb8, "__raw_spin_lock_init" },
 	{ 0x1934faed, "wake_up_process" },
 	{ 0xd2965f6f, "kthread_should_stop" },
 	{ 0x37a0cba, "kfree" },
 	{ 0xe1c7b3df, "remap_pfn_range" },
 	{ 0x9d669763, "memcpy" },
+	{ 0x58470613, "hrtimer_init" },
 	{ 0xfc3c44b3, "daq_devid_alloc" },
 	{ 0x3e1a0666, "dev_get_drvdata" },
 	{ 0x295f29a0, "filp_open" },
@@ -71,4 +74,4 @@ __attribute__((section(".modinfo"))) =
 "depends=biokernbase";
 
 
-MODULE_INFO(srcversion, "3678EE36A1250475071988B");
+MODULE_INFO(srcversion, "D4AC22711FFDBFF36D3BF0E");

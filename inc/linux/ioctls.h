@@ -199,6 +199,15 @@ typedef struct _AI_READ_SAMPLES{
 
 #define IOCTL_AI_READ_SAMPLES                _IO(BDAQ_AI_MAGIC, 2)
 
+typedef struct _AI_CALI_CMD{
+   unsigned char mdlNumber;
+   unsigned char caliType;
+   unsigned char getResult;
+}AI_CALI_CMD;
+
+#define IOCTL_AI_CALIBRATE                   _IO(BDAQ_AI_MAGIC, 3)
+
+
 // Input:  AI_READ_CJC_SAMPLES.
 // Output: an array of Binary data.
 typedef struct _AI_READ_CJC_SAMPLES{
@@ -207,28 +216,28 @@ typedef struct _AI_READ_CJC_SAMPLES{
    void   *CjcValues;  //variable length array for CJC value
 }AI_READ_CJC_SAMPLES;
 
-#define IOCTL_AI_READ_CJC_SAMPLES            _IO(BDAQ_AI_MAGIC, 3)
+#define IOCTL_AI_READ_CJC_SAMPLES            _IO(BDAQ_AI_MAGIC, 4)
 
 // Get the channel's status of USB device
 //    used for Burn Detect and calibration
-#define IOCTL_AI_BURN_DETECT                 _IO(BDAQ_AI_MAGIC, 4)
+#define IOCTL_AI_BURN_DETECT                 _IO(BDAQ_AI_MAGIC, 5)
 
 // Input: pointer to structure FAI_PARAM.
 // Output: <None>
-#define IOCTL_FAI_SET_PARAM                  _IO(BDAQ_AI_MAGIC, 5)
+#define IOCTL_FAI_SET_PARAM                  _IO(BDAQ_AI_MAGIC, 6)
 
 // Input: pointer to user buffer
 // Output: <None>
-#define IOCTL_FAI_SET_BUFFER                 _IO(BDAQ_AI_MAGIC, 6)
+#define IOCTL_FAI_SET_BUFFER                 _IO(BDAQ_AI_MAGIC, 7)
 
 // Input:  __u32, acquisition mode: FINITE or INFINITE
 // Output: <None>
-#define IOCTL_FAI_START                      _IO(BDAQ_AI_MAGIC, 7)
+#define IOCTL_FAI_START                      _IO(BDAQ_AI_MAGIC, 8)
 
 // Input: __u32, other flags.
 // Output: <None>
 #define FAI_STOP_FREE_RES  0x1   // free resource or not: 0 -- do not free resource, 1 -- free resource.
-#define IOCTL_FAI_STOP                       _IO(BDAQ_AI_MAGIC, 8)
+#define IOCTL_FAI_STOP                       _IO(BDAQ_AI_MAGIC, 9)
 
 //******************************************************************************************
 //                                                                                         *

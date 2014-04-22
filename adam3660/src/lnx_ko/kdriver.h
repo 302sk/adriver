@@ -101,6 +101,8 @@ int daq_ioctl_do_read_port( daq_device_t *daq_dev, unsigned long arg );
 void daq_ai_initialize_hw( daq_device_t *daq_dev );
 int daq_ioctl_ai_read_sample( daq_device_t *daq_dev, unsigned long arg );
 int daq_ioctl_ai_set_channel(daq_device_t *daq_dev, unsigned long arg);
+int daq_ioctl_ai_calibrate( daq_device_t *daq_dev, unsigned long arg);
+
 
 //device.c
 int daq_device_fw_download(daq_device_t *daq_dev, unsigned long arg );

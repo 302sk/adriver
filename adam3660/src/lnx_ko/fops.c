@@ -322,9 +322,11 @@ long daq_file_ioctl( struct file *filp, unsigned int cmd, unsigned long arg)
          ret = daq_ioctl_ai_set_channel(daq_dev, arg);
          break;
 		case IOCTL_AI_READ_SAMPLES:
-         //printk(KERN_ALERT"ai read samples\n");
 			ret = daq_ioctl_ai_read_sample(daq_dev, arg);
 			break;
+      case IOCTL_AI_CALIBRATE:
+         ret = daq_ioctl_ai_calibrate(daq_dev, arg);
+         break;
       case IOCTL_AO_SET_CHAN_CFG:
          ret = daq_ioctl_ao_set_channel(daq_dev, arg);
          break;   

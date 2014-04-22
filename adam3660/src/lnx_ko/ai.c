@@ -8,6 +8,81 @@ void daq_ai_initialize_hw( daq_device_t *daq_dev )
 
 }
 
+int daq_ioctl_ai_calibrate( daq_device_t *daq_dev, unsigned long arg)
+{
+   DEVICE_SHARED *shared = &daq_dev->shared;
+   daq_spi_transaction_t * cur;
+   daq_task_info_t task;
+   AI_CALI_CMD xbuf;
+   CHANNEL_RANGE chl_rng;
+   int i = 0;
+   MODULE_INFO module_info;
+   int evt_ret = 0;
+   unsigned char expected_ret = 0;
+
+   if(unlikely(copy_from_user(&xbuf, (void*)arg, sizeof(xbuf)))){
+      return -EFAULT;
+   }
+ 
+   task.module_id = xbuf.mdlNumber;
+   if(xbuf.caliType == 0x55 || xbuf.caliType == 0xaa){
+      task.module_data.command = comm_ai_cal;
+   }else{
+      task.module_data.command = comm_ai_caltofac;
+   }
+   
+   if(xbuf.getResult){   
+      task.module_data.command_type = comm_mode_read;
+      expected_ret = xbuf.caliType;
+   }else{
+      task.module_data.command_type = comm_mode_write;
+      task.len = 1; 
+   }
+   task.header_cmd = header_com_common;
+   task.module_data.channel_rng.value = 0;
+   task.data = &xbuf.caliType;
+
+   spin_lock(&daq_dev->trsc_lock);
+   cur = &daq_dev->spi_transaction[daq_dev->curr_trsc];
+   add_task(cur, &task);
+   spin_unlock(&daq_dev->trsc_lock);
+   
+
+   uint32 pre = jiffies;
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   daq_trace((KERN_ALERT"****calibration wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
+
+   if( evt_ret != 0)
+   {
+      daq_trace((KERN_ALERT"****pid = calibration: wait until time out\n", current->pid));
+      return -EBUSY;
+   }
+   for(i = 0; i<cur->recv_count; i++)
+   {
+
+      if(cur->task_list_rcv[i].module_id == xbuf.mdlNumber 
+         && cur->task_list_rcv[i].module_data.command == comm_ai_cal
+         && cur->task_list_rcv[i].module_data.command_type == comm_mode_read)
+      {
+         daq_trace((KERN_ALERT"****Response data are found out!\n"));
+         if(cur->task_list_rcv[i].data[0] == expected_ret){
+            return 0;
+         }else{
+            return -EBUSY;
+         }
+         /*
+         if(unlikely(copy_to_user((void *)xbuf.Data, cur->task_list_rcv[i].data, xbuf.LogChanCount * 2))){
+            return -EFAULT;
+         }else{
+            return 0;
+         }
+         */
+      }
+   }
+   
+   return 0;
+}
+
 int daq_ioctl_ai_read_sample( daq_device_t *daq_dev, unsigned long arg )
 {
    DEVICE_SHARED *shared = &daq_dev->shared;

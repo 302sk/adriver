@@ -12,9 +12,9 @@
 
 
 #define ADVANTECH_VID	0x13fe
-#define DRIVER_NAME	"bio3660"
+#define DRIVER_NAME	   "bio3660"
 #define DEVICE_NAME 	"adam3660-io"
-#define DEVICE_ID	0x3660
+#define DEVICE_ID	   0x3660
 
 #define MODULE_MAX_COUNT   5
 #define MODULE_MAX_FUNC    4
@@ -22,16 +22,16 @@
 
 #define MODULE_DATA_MAX 16
 
-#define AI_CHL_COUNT	8
-#define AI_CHL_MASK	(AI_CHL_COUNT - 1)
-#define AI_DATA_SIZE	sizeof(uint32)
-#define AI_DATA_MASK	0xffff0000
+#define AI_CHL_COUNT    8   
+#define AI_CHL_MASK     (AI_CHL_COUNT - 1)
+#define AI_DATA_SIZE    sizeof(uint32)
+#define AI_DATA_MASK    0xffff0000
 
-#define AI_RESOLUTION_IN_BIT             16
+#define AI_RESOLUTION_IN_BIT  16
 
 
-#define AI_GAIN_V_Neg10T010	0
-#define AI_GAIN_V_Neg5To5	1
+#define AI_GAIN_V_Neg10T010   0
+#define AI_GAIN_V_Neg5To5     1
 
 
 #define DEF_AI_CHTYPE           1 // differential
@@ -39,13 +39,13 @@
 
 
 //Ao default values
-#define VOLTAGE 	0
-#define CURRENT		1
+#define VOLTAGE   0
+#define CURRENT   1
 
-#define AO_CHL_COUNT	2
-#define AO_CHL_MASK	(AO_CHL_COUNT - 1)
-#define AO_DATA_SIZE	sizeof(__u32)
-#define AO_DATA_MASK	0xfff0
+#define AO_CHL_COUNT    2
+#define AO_CHL_MASK     (AO_CHL_COUNT - 1)
+#define AO_DATA_SIZE    sizeof(__u32)
+#define AO_DATA_MASK    0xfff0
 
 #define AO_RES_IN_BIT         12
 
@@ -123,6 +123,12 @@ typedef struct _MODULE_RESOURCE_INFO
    __u8  di_chl_num;
    __u8  do_chl_num;
 }MODULE_RESOURCE_INFO;
+
+typedef struct _IO_MODULE_INFO
+{
+   __u8  module_id;
+   __u8  module_name[10];
+}IO_MODULE_INFO;
 #pragma pack()
 
 typedef struct _MODULE_PROFILE

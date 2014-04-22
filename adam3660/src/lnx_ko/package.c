@@ -174,9 +174,11 @@ calc_by_cmd:
          case header_com_search:
             len = 19;
             break;
+         case comm_ai_cal:
+            len = 1;
+            break;
          case comm_ao_cal:
          case comm_ao_caltofac:
-         case comm_ai_cal:
          case comm_ai_caltofac:
             len = 0;    //reset just a command sent to module,so there's no data after that command
             break;
