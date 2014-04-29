@@ -67,7 +67,6 @@ HEADER_INFO* add_header_info(SPI_PACKAGE *package, __u16 module_count, __u8 comm
    header->command = command;
    header->data_len = len;
 
-//   ret = calc_checksum((__u8*)header, &header->check_sum, sizeof(HEADER_INFO)-2);
    package->offset += sizeof(HEADER_INFO);
    return header;
 }
@@ -95,10 +94,12 @@ int add_module_data(SPI_PACKAGE *package, MODULE_DATA *mdl_data, __u8 *data, __u
    __u8*  data_write_pos = 0;
    int ret = 0;
    
-   if(len == 0)
+   if(len == 0){
       data_len = calc_data_len(PKG_DIR_SND, mdl_data); //calculate how much data should be sent
-   else
+      printk(KERN_ALERT"++++data_len = %d\n", data_len);
+   }else{
       data_len = len;
+   }
    
    if((package->len - package->offset) < sizeof(MODULE_DATA) + data_len)
       return PKG_ERROR;
@@ -158,15 +159,6 @@ int calc_data_len(int pkg_dir, MODULE_DATA *mdl_data)
  
    }
    
-//   if(((cmd_type & comm_mode_read) && (pkg_dir == PKG_DIR_SND)) ||  //send read command, there's no data being sent.
-//      ((!(cmd_type & comm_mode_read)) && (pkg_dir == PKG_DIR_RCV)) || //receive write command, there's no data coming back.
-//      ((cmd_type & comm_st_error) && (pkg_dir == PKG_DIR_RCV)))     //read data error, no data
-//   {  
-      
-//      return 0;
-      
-//   }
-//   else
 calc_by_cmd:
    {
       switch(cmd)
@@ -175,11 +167,11 @@ calc_by_cmd:
             len = 19;
             break;
          case comm_ai_cal:
+         case comm_ai_caltofac:
             len = 1;
             break;
          case comm_ao_cal:
          case comm_ao_caltofac:
-         case comm_ai_caltofac:
             len = 0;    //reset just a command sent to module,so there's no data after that command
             break;
          case comm_ao_unit:
@@ -189,7 +181,6 @@ calc_by_cmd:
          case comm_ai_burnchk:
          case comm_ai_alarm:
             len = 0;
-            //don't know these commands
             break;
          case comm_do_rngcode:
          case comm_di_rngcode:
@@ -256,13 +247,14 @@ int get_module_info(SPI_PACKAGE *package, MODULE_INFO *module)
    __u8 *pos;
    __u16 chk_sum = 0;
    __u16 real_sum = 0;
+   
    if((package->len - package->offset) < sizeof(MODULE_INFO))
       return PKG_ERROR;
    pos = (__u8*)(package->data + package->offset);
    memcpy((__u8*)module, pos, sizeof(MODULE_INFO));
-//   calc_checksum((__u8*)module, &chk_sum, sizeof(MODULE_INFO));
+
    //get check sum
-   real_sum = *((__u16*)(pos + module->data_len - 2));
+   real_sum = *((__u16*)(pos + module->data_len - 2));  
    calc_checksum((__u8*)pos, &chk_sum, module->data_len - 2);
 
    package->offset += sizeof(MODULE_INFO);
@@ -271,7 +263,7 @@ int get_module_info(SPI_PACKAGE *package, MODULE_INFO *module)
    {
       return 0;
    }else{
-      //printk(KERN_ALERT"++++check sum is not correct!real_sum = %x chk_sum = %x ++++\n", real_sum, chk_sum);
+      printk(KERN_ALERT"----check sum is not correct!real_sum = %x chk_sum = %x ++++\n", real_sum, chk_sum);
       return PKG_ERROR;
    }
 }

@@ -348,6 +348,9 @@ long daq_file_ioctl( struct file *filp, unsigned int cmd, unsigned long arg)
       case IOCTL_DEVICE_FIRMWARE_DOWNLOAD:
          ret = daq_device_fw_download(daq_dev, arg);
          break;
+      case IOCTL_DEVICE_SEARCH:
+         ret = daq_device_search(daq_dev, arg);
+         break;
 		default:
 			ret = -ENOTTY;
 			break;

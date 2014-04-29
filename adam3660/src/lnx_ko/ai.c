@@ -34,6 +34,7 @@ int daq_ioctl_ai_calibrate( daq_device_t *daq_dev, unsigned long arg)
    if(xbuf.getResult){   
       task.module_data.command_type = comm_mode_read;
       expected_ret = xbuf.caliType;
+      task.len = 0;
    }else{
       task.module_data.command_type = comm_mode_write;
       task.len = 1; 
@@ -49,7 +50,7 @@ int daq_ioctl_ai_calibrate( daq_device_t *daq_dev, unsigned long arg)
    
 
    uint32 pre = jiffies;
-   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 11000);
    daq_trace((KERN_ALERT"****calibration wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
 
    if( evt_ret != 0)
@@ -61,10 +62,11 @@ int daq_ioctl_ai_calibrate( daq_device_t *daq_dev, unsigned long arg)
    {
 
       if(cur->task_list_rcv[i].module_id == xbuf.mdlNumber 
-         && cur->task_list_rcv[i].module_data.command == comm_ai_cal
-         && cur->task_list_rcv[i].module_data.command_type == comm_mode_read)
+         && ((cur->task_list_rcv[i].module_data.command == comm_ai_cal) || (cur->task_list_rcv[i].module_data.command == comm_ai_caltofac))
+         && cur->task_list_rcv[i].module_data.command_type == (comm_mode_read | comm_dir_res))
       {
          daq_trace((KERN_ALERT"****Response data are found out!\n"));
+         printk(KERN_ALERT"****cur->task_list_rcv[%d].data[0] = %x\n", i, cur->task_list_rcv[i].data[0]);
          if(cur->task_list_rcv[i].data[0] == expected_ret){
             return 0;
          }else{
@@ -110,12 +112,13 @@ int daq_ioctl_ai_read_sample( daq_device_t *daq_dev, unsigned long arg )
 
    spin_lock(&daq_dev->trsc_lock);
    cur = &daq_dev->spi_transaction[daq_dev->curr_trsc];
+   daq_trace((KERN_ALERT"****CUR = %x\n", cur));
    add_task(cur, &task);
    spin_unlock(&daq_dev->trsc_lock);
    
 
    uint32 pre = jiffies;
-   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 3000);
    daq_trace((KERN_ALERT"****wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
    daq_trace((KERN_ALERT"****cur = %x cur->recv_count = %d\n", cur, cur->recv_count));
 
@@ -187,7 +190,7 @@ int daq_ioctl_ai_set_channel( daq_device_t *daq_dev, unsigned long arg )
    add_task(cur, &task);
    spin_unlock(&daq_dev->trsc_lock);
 
-   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 3000);
 
    if( evt_ret != 0)  //wait event timeout
    {

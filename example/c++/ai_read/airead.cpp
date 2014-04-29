@@ -68,10 +68,12 @@ int main(int argc, char* argv[])
 		printf("Acquisition is in progress, any key to quit!\n\n");
 		double	scaledData[channelCount] = {0};//the count of elements in this array should not be less than the value of the variable channelCount
 		int16	rawData[channelCount] = {0};
-		BYTE	rngCode[channelCount] = {0};
+		//long	rngCode[channelCount] = {V_Neg10To10, V_Neg10To10,V_Neg10To10,V_Neg10To10,V_Neg10To10,V_Neg10To10,V_Neg10To10,V_Neg10To10};
+		long	rngCode[channelCount] = {V_Neg2pt5To2pt5,V_Neg10To10, V_Neg2pt5To2pt5,V_Neg10To10,V_Neg2pt5To2pt5,V_Neg10To10,V_Neg2pt5To2pt5,V_Neg10To10};
 		//Set value range
 		ret = ai->SetValueRange(moduleNumber, startChannel, channelCount, rngCode);
-		memset(rngCode, 1, channelCount);
+		memset(rngCode, 0, channelCount);
+		SLEEP(1);
 		//Get value range
 		ret = ai->GetValueRange(moduleNumber, startChannel, channelCount, rngCode);
 		//Read back the value range

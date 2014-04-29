@@ -49,7 +49,6 @@ typedef enum tagModuleType {
    DaqAi,
    DaqAo,
    DaqDio,
-   DaqCounter,
 } ModuleType;
 
 typedef enum tagAccessMode {
@@ -57,34 +56,6 @@ typedef enum tagAccessMode {
    ModeWrite,
    ModeWriteWithReset,
 } AccessMode;
-
-typedef enum tagMathIntervalType {
-   /* Right boundary definition, define the maximum value state, use the bit 0,1 */
-   RightOpenSet        = 0x0, /* No maximum value limitation.  */
-   RightClosedBoundary = 0x1,	/* The maximum value is included. */
-   RightOpenBoundary   = 0x2, /* The maximum value is not included. */
-
-   /* Left boundary definition, define the minimum value state, used the bit 2, 3 */
-   LeftOpenSet        = 0x0,	/* No minimum value limitation. */
-   LeftClosedBoundary = 0x4, 	/* The minimum value is included. */
-   LeftOpenBoundary   = 0x8,	/* The minimum value is not included */
-
-   /* The signality expression */
-   Boundless          = 0x0,  /* Boundless set. (LeftOpenSet | RightOpenSet) */
-
-   /* The combination notation */
-   LOSROS = 0x0,	 /* ( LeftOpenSet | RightOpenSet), algebra notation: ( un-limit, max) */
-   LOSRCB = 0x1,	 /* ( LeftOpenSet | RightClosedBoundary), algebra notation: ( un-limit, max ] */
-   LOSROB = 0x2,	 /* ( LeftOpenSet | RightOpenBoundary), algebra notation: ( un-limit, max) */
-
-   LCBROS = 0x4,	 /* ( LeftClosedBoundary | RightOpenSet), algebra notation: [min, un-limit) */
-   LCBRCB = 0x5,	 /* ( LeftClosedBoundary | RightClosedBoundary), algebra notation: [ min, right ] */
-   LCBROB = 0x6,	 /* ( LeftClosedBoundary | RightOpenBoundary), algebra notation: [ min, right) */
-
-   LOBROS = 0x8,	 /* ( LeftOpenBoundary | RightOpenSet), algebra notation: ( min, un-limit) */
-   LOBRCB = 0x9,	 /* ( LeftOpenBoundary | RightClosedBoundary), algebra notation: ( min, right ] */
-   LOBROB = 0xA,	 /* ( LeftOpenBoundary | RightOpenBoundary), algebra notation: ( min, right) */
-} MathIntervalType;
 
 typedef struct tagMathInterval {
    long   Type; 
@@ -127,38 +98,6 @@ typedef enum tagDioPortDir {
    LinHout = 0xF0,
    Output  = 0xFF,
 } DioPortDir;
-
-typedef enum tagSamplingMethod {
-   EqualTimeSwitch = 0,
-   Simultaneous,
-} SamplingMethod;
-
-typedef enum tagTemperatureDegree {
-   Celsius = 0,
-   Fahrenheit,
-   Rankine,
-   Kelvin,
-} TemperatureDegree;
-
-typedef enum tagBurnoutRetType {
-   Current = 0,
-   ParticularValue,
-   UpLimit,
-   LowLimit,
-   LastCorrectValue,
-} BurnoutRetType;
-
-typedef enum tagValueUnit {
-   Kilovolt,      /* KV */
-   Volt,          /* V  */
-   Millivolt,     /* mV */
-   Microvolt,     /* uV */
-   Kiloampere,    /* KA */
-   Ampere,        /* A  */
-   Milliampere,   /* mA */
-   Microampere,   /* uA */
-   CelsiusUnit,   /* Celsius */
-} ValueUnit;
 
 typedef enum tagValueRange {
    V_OMIT = -1,            /* Unknown when get, ignored when set */
@@ -262,112 +201,6 @@ typedef enum tagValueRange {
    V_ExternalRefBipolar = 0xF001, /* External reference voltage unipolar */
    V_ExternalRefUnipolar = 0xF002, /* External reference voltage bipolar */
 } ValueRange;
-
-typedef enum tagSignalPolarity {
-   Negative = 0,
-   Positive,
-} SignalPolarity;
-
-typedef enum tagSignalCountingType {
-   DownCount = 0,  /* counter value decreases on each clock */
-   UpCount,        /* counter value increases on each clock */
-   PulseDirection, /* counting direction is determined by two signals, one is clock, the other is direction signal */
-   TwoPulse,       /* counting direction is determined by two signals, one is up-counting signal, the other is down-counting signal */
-   AbPhaseX1,      /* AB phase, 1x rate up/down counting */
-   AbPhaseX2,      /* AB phase, 2x rate up/down counting */
-   AbPhaseX4,      /* AB phase, 4x rate up/down counting */
-} SignalCountingType;
-
-typedef enum tagOutSignalType{
-   SignalOutNone = 0,  /* no output or output is 'disabled' */
-   ChipDefined,        /* hardware chip defined */
-   NegChipDefined,     /* hardware chip defined, negative logical */
-   PositivePulse,      /* a low-to-high pulse */
-   NegativePulse,      /* a high-to-low pulse */
-   ToggledFromLow,     /* the level toggled from low to high */
-   ToggledFromHigh,    /* the level toggled from high to low */
-} OutSignalType;
-
-typedef enum tagCounterCapability {
-   Primary = 1,
-   InstantEventCount,
-   OneShot,
-   TimerPulse,
-   InstantFreqMeter,
-   InstantPwmIn,
-   InstantPwmOut,
-   SnapCount,
-} CounterCapability;
-
-typedef enum tagCounterOperationMode {
-   C8254_M0 = 0, /*8254 mode 0, interrupt on terminal count */
-   C8254_M1,     /*8254 mode 1, hardware retriggerable one-shot */
-   C8254_M2,     /*8254 mode 2, rate generator */
-   C8254_M3,     /*8254 mode 3, square save mode */
-   C8254_M4,     /*8254 mode 4, software triggered strobe */
-   C8254_M5,     /*8254 mode 5, hardware triggered strobe */
-
-   C1780_MA,	/* Mode A level & pulse out, Software-Triggered without Hardware Gating */
-   C1780_MB,	/* Mode B level & pulse out, Software-Triggered with Level Gating, = 8254_M0 */
-   C1780_MC,	/* Mode C level & pulse out, Hardware-triggered strobe level */
-   C1780_MD,	/* Mode D level & Pulse out, Rate generate with no hardware gating */
-   C1780_ME,	/* Mode E level & pulse out, Rate generator with level Gating */
-   C1780_MF,	/* Mode F level & pulse out, Non-retriggerable One-shot (Pulse type = 8254_M1) */
-   C1780_MG,	/* Mode G level & pulse out, Software-triggered delayed pulse one-shot */
-   C1780_MH,	/* Mode H level & pulse out, Software-triggered delayed pulse one-shot with hardware gating */
-   C1780_MI,	/* Mode I level & pulse out, Hardware-triggered delay pulse strobe */
-   C1780_MJ,	/* Mode J level & pulse out, Variable Duty Cycle Rate Generator with No Hardware Gating */
-   C1780_MK,	/* Mode K level & pulse out, Variable Duty Cycle Rate Generator with Level Gating */
-   C1780_ML,	/* Mode L level & pulse out, Hardware-Triggered Delayed Pulse One-Shot */
-   C1780_MO,	/* Mode O level & pulse out, Hardware-Triggered Strobe with Edge Disarm */
-   C1780_MR,	/* Mode R level & pulse out, Non-Retriggerbale One-Shot with Edge Disarm */
-   C1780_MU,	/* Mode U level & pulse out, Hardware-Triggered Delayed Pulse Strobe with Edge Disarm */
-   C1780_MX,	/* Mode X level & pulse out, Hardware-Triggered Delayed Pulse One-Shot with Edge Disarm */
-} CounterOperationMode;
-
-typedef enum tagCounterValueRegister {
-   CntLoad,
-   CntPreset = CntLoad,
-   CntHold,
-   CntOverCompare,
-   CntUnderCompare,
-} CounterValueRegister;
-
-typedef enum tagCounterCascadeGroup {
-   GroupNone = 0,    /* no cascade*/
-   Cnt0Cnt1,	      /* Counter 0 as first, counter 1 as second. */
-   Cnt2Cnt3,	      /* Counter 2 as first, counter 3 as second */
-   Cnt4Cnt5,	      /* Counter 4 as first, counter 5 as second */
-   Cnt6Cnt7,	      /* Counter 6 as first, counter 7 as second */
-} CounterCascadeGroup;
-
-typedef enum tagFreqMeasureMethod {
-   AutoAdaptive = 0, 		   /* Intelligently select the measurement method according to the input signal. */
-   CountingPulseBySysTime, 	/* Using system timing clock to calculate the frequency */
-   CountingPulseByDevTime,	   /* Using the device timing clock to calculate the frequency */
-   PeriodInverse,			      /* Calculate the frequency from the period of the signal */
-} FreqMeasureMethod;
-
-typedef enum tagActiveSignal {
-   ActiveNone = 0,
-   RisingEdge,
-   FallingEdge,
-   BothEdge,
-   HighLevel,
-   LowLevel,
-} ActiveSignal;
-
-typedef enum tagTriggerAction {
-   ActionNone = 0,   /* No action to take even if the trigger condition is satisfied */
-   DelayToStart,     /* Begin to start after the specified time is elapsed if the trigger condition is satisfied */
-   DelayToStop,      /* Stop execution after the specified time is elapsed if the trigger condition is satisfied */
-} TriggerAction;
-
-typedef enum tagSignalPosition {
-   InternalSig = 0,
-   OnConnector,
-   OnAmsi,
-} SignalPosition;
 
 typedef enum tagSignalDrop {
    SignalNone = 0,      /* No connection */
@@ -483,23 +316,6 @@ typedef enum tagSignalDrop {
    SigDio232, SigDio233, SigDio234, SigDio235, SigDio236, SigDio237, SigDio238, SigDio239,
    SigDio240, SigDio241, SigDio242, SigDio243, SigDio244, SigDio245, SigDio246, SigDio247,
    SigDio248, SigDio249, SigDio250, SigDio251, SigDio252, SigDio253, SigDio254, SigDio255,
-
-   /*Counter clock pins*/
-   SigCntClk0, SigCntClk1, SigCntClk2, SigCntClk3, SigCntClk4, SigCntClk5, SigCntClk6, SigCntClk7,
-
-   /*counter gate pins*/
-   SigCntGate0, SigCntGate1, SigCntGate2, SigCntGate3, SigCntGate4, SigCntGate5, SigCntGate6, SigCntGate7,
-
-   /*counter out pins*/
-   SigCntOut0,  SigCntOut1,  SigCntOut2,  SigCntOut3,  SigCntOut4,  SigCntOut5,  SigCntOut6,  SigCntOut7,
-
-   /*counter frequency out pins*/
-   SigCntFout0, SigCntFout1, SigCntFout2, SigCntFout3, SigCntFout4, SigCntFout5, SigCntFout6, SigCntFout7,
-
-   /*AMSI pins*/
-   SigAmsiPin0,  SigAmsiPin1,  SigAmsiPin2,  SigAmsiPin3,  SigAmsiPin4,  SigAmsiPin5,  SigAmsiPin6,  SigAmsiPin7,
-   SigAmsiPin8,  SigAmsiPin9,  SigAmsiPin10, SigAmsiPin11, SigAmsiPin12, SigAmsiPin13, SigAmsiPin14, SigAmsiPin15,
-   SigAmsiPin16, SigAmsiPin17, SigAmsiPin18, SigAmsiPin19,
 
    /*new clocks*/
    SigInternal2Hz,         /* Device built-in clock, 2Hz */
@@ -630,32 +446,6 @@ typedef enum tagEventId {
    EvtBufferedDoStopped,
 
    EvtReflectWdtOccured,
-   /*-----------------------------------------------------------------
-   * Counter/Timer event IDs
-   *-----------------------------------------------------------------*/
-   EvtCntTerminalCount0, EvtCntTerminalCount1, EvtCntTerminalCount2, EvtCntTerminalCount3,
-   EvtCntTerminalCount4, EvtCntTerminalCount5, EvtCntTerminalCount6, EvtCntTerminalCount7,
-
-   EvtCntOverCompare0,   EvtCntOverCompare1,   EvtCntOverCompare2,   EvtCntOverCompare3,
-   EvtCntOverCompare4,   EvtCntOverCompare5,   EvtCntOverCompare6,   EvtCntOverCompare7,
-
-   EvtCntUnderCompare0,  EvtCntUnderCompare1,  EvtCntUnderCompare2,  EvtCntUnderCompare3,
-   EvtCntUnderCompare4,  EvtCntUnderCompare5,  EvtCntUnderCompare6,  EvtCntUnderCompare7,
-
-   EvtCntEcOverCompare0, EvtCntEcOverCompare1, EvtCntEcOverCompare2, EvtCntEcOverCompare3,
-   EvtCntEcOverCompare4, EvtCntEcOverCompare5, EvtCntEcOverCompare6, EvtCntEcOverCompare7,
-
-   EvtCntEcUnderCompare0,EvtCntEcUnderCompare1,EvtCntEcUnderCompare2,EvtCntEcUnderCompare3,
-   EvtCntEcUnderCompare4,EvtCntEcUnderCompare5,EvtCntEcUnderCompare6,EvtCntEcUnderCompare7,
-
-   EvtCntOneShot0,       EvtCntOneShot1,       EvtCntOneShot2,       EvtCntOneShot3,
-   EvtCntOneShot4,       EvtCntOneShot5,       EvtCntOneShot6,       EvtCntOneShot7,
-
-   EvtCntTimer0,         EvtCntTimer1,         EvtCntTimer2,         EvtCntTimer3,
-   EvtCntTimer4,         EvtCntTimer5,         EvtCntTimer6,         EvtCntTimer7,
-
-   EvtCntPwmInOverflow0, EvtCntPwmInOverflow1, EvtCntPwmInOverflow2, EvtCntPwmInOverflow3,
-   EvtCntPwmInOverflow4, EvtCntPwmInOverflow5, EvtCntPwmInOverflow6, EvtCntPwmInOverflow7,
 
 } EventId ;
 
@@ -864,159 +654,6 @@ typedef enum tagPropertyId {
    CFG_DoTriggerSourceEdge1,
    CFG_DoTriggerSourceLevel1,                   /* Reserved for later using */
    CFG_DoTriggerDelayCount1,
-
-   /*-----------------------------------------------------------------
-   * component specified Property IDs -- Counter/Timer
-   *-----------------------------------------------------------------*/
-   /*common feature*/
-   CFG_FeatureCapabilitiesOfCounter0 = 174,
-   CFG_FeatureCapabilitiesOfCounter1,
-   CFG_FeatureCapabilitiesOfCounter2,
-   CFG_FeatureCapabilitiesOfCounter3,
-   CFG_FeatureCapabilitiesOfCounter4,
-   CFG_FeatureCapabilitiesOfCounter5,
-   CFG_FeatureCapabilitiesOfCounter6,
-   CFG_FeatureCapabilitiesOfCounter7,
-
-   /*primal counter features*/
-   CFG_FeatureChipOperationModes = 206,
-   CFG_FeatureChipSignalCountingTypes,
-
-   /*timer/pulse features*/
-   CFG_FeatureTmrCascadeGroups = 211,
-
-   /*frequency measurement features*/
-   CFG_FeatureFmMethods = 213,
-
-   /*Primal counter properties */
-   CFG_ChipOperationModeOfCounters = 220,
-   CFG_ChipSignalCountingTypeOfCounters,
-   CFG_ChipLoadValueOfCounters,
-   CFG_ChipHoldValueOfCounters,
-   CFG_ChipOverCompareValueOfCounters,
-   CFG_ChipUnderCompareValueOfCounters,
-   CFG_ChipOverCompareEnabledCounters,
-   CFG_ChipUnderCompareEnabledCounters,
-
-   /*frequency measurement properties*/
-   CFG_FmMethodOfCounters = 231,
-   CFG_FmCollectionPeriodOfCounters,
-
-   //##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   // v1.1
-   //##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   CFG_DevicePrivateRegionLength,
-   CFG_SaiAutoConvertClockRate,
-   CFG_SaiAutoConvertChannelStart,
-   CFG_SaiAutoConvertChannelCount,
-   CFG_ExtPauseSignalEnabled,
-   CFG_ExtPauseSignalPolarity,
-   CFG_OrderOfChannels,
-   CFG_InitialStateOfChannels,
-
-   //##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   // v1.2: new features & properties of counter
-   //##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   /*primal counter features*/
-   CFG_FeatureChipClkSourceOfCounter0 = 242,
-   CFG_FeatureChipClkSourceOfCounter1,
-   CFG_FeatureChipClkSourceOfCounter2,
-   CFG_FeatureChipClkSourceOfCounter3,
-   CFG_FeatureChipClkSourceOfCounter4,
-   CFG_FeatureChipClkSourceOfCounter5,
-   CFG_FeatureChipClkSourceOfCounter6,
-   CFG_FeatureChipClkSourceOfCounter7,
-
-   CFG_FeatureChipGateSourceOfCounter0,
-   CFG_FeatureChipGateSourceOfCounter1,
-   CFG_FeatureChipGateSourceOfCounter2,
-   CFG_FeatureChipGateSourceOfCounter3,
-   CFG_FeatureChipGateSourceOfCounter4,
-   CFG_FeatureChipGateSourceOfCounter5,
-   CFG_FeatureChipGateSourceOfCounter6,
-   CFG_FeatureChipGateSourceOfCounter7,
-
-   CFG_FeatureChipValueRegisters,
-
-   /*one-shot features*/
-   CFG_FeatureOsClkSourceOfCounter0,
-   CFG_FeatureOsClkSourceOfCounter1,
-   CFG_FeatureOsClkSourceOfCounter2,
-   CFG_FeatureOsClkSourceOfCounter3,
-   CFG_FeatureOsClkSourceOfCounter4,
-   CFG_FeatureOsClkSourceOfCounter5,
-   CFG_FeatureOsClkSourceOfCounter6,
-   CFG_FeatureOsClkSourceOfCounter7,
-
-   CFG_FeatureOsGateSourceOfCounter0,
-   CFG_FeatureOsGateSourceOfCounter1,
-   CFG_FeatureOsGateSourceOfCounter2,
-   CFG_FeatureOsGateSourceOfCounter3,
-   CFG_FeatureOsGateSourceOfCounter4,
-   CFG_FeatureOsGateSourceOfCounter5,
-   CFG_FeatureOsGateSourceOfCounter6,
-   CFG_FeatureOsGateSourceOfCounter7,
-
-   /*Pulse width measurement features*/
-   CFG_FeaturePiCascadeGroups,
-
-   /*Primal counter properties */
-   CFG_ChipClkSourceOfCounters = 279, 
-   CFG_ChipGateSourceOfCounters,
-
-   /*one-shot properties*/
-   CFG_OsClkSourceOfCounters, 
-   CFG_OsGateSourceOfCounters,
-   CFG_OsDelayCountOfCounters,
-
-   /*Timer pulse properties*/
-   CFG_TmrFrequencyOfCounters,
-
-   /*Pulse width modulation properties*/
-   CFG_PoHiPeriodOfCounters,
-   CFG_PoLoPeriodOfCounters,
-
-   //##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   // v1.3: new features & properties of counter
-   //##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   /*Event counting features & properties*/
-   CFG_FeatureEcClkPolarities,
-   CFG_FeatureEcGatePolarities,
-   CFG_FeatureEcGateControlOfCounters,
-
-   CFG_EcClkPolarityOfCounters,
-   CFG_EcGatePolarityOfCounters,
-   CFG_EcGateEnabledOfCounters,
-
-   /*one-shot features & properties*/
-   CFG_FeatureOsClkPolarities,
-   CFG_FeatureOsGatePolarities,
-   CFG_FeatureOsOutSignals,
-
-   CFG_OsClkPolarityOfCounters,
-   CFG_OsGatePolarityOfCounters,
-   CFG_OsOutSignalOfCounters,
-
-   /*timer/pulse features & properties*/
-   CFG_FeatureTmrGateControlOfCounters,
-   CFG_FeatureTmrGatePolarities,
-   CFG_FeatureTmrOutSignals,
-   CFG_FeatureTmrFrequencyRange,
-
-   CFG_TmrGateEnabledOfCounters,
-   CFG_TmrGatePolarityOfCounters,
-   CFG_TmrOutSignalOfCounters,
-
-   /*Pulse width modulation features & properties*/
-   CFG_FeaturePoGateControlOfCounters,
-   CFG_FeaturePoGatePolarities,
-   CFG_FeaturePoHiPeriodRange,
-   CFG_FeaturePoLoPeriodRange,
-   CFG_FeaturePoOutCountRange,
-
-   CFG_PoGateEnabledOfCounters,
-   CFG_PoGatePolarityOfCounters,
-   CFG_PoOutCountOfCounters
 } PropertyId;
 
 #define BioFailed(c)       ( (unsigned)(c) >= (unsigned)0xE0000000 )   
@@ -1216,111 +853,6 @@ typedef enum tagErrorCode {
 // Advantech CardType ID 
 typedef enum tagProductId {
    BD_DEMO   = 0x00,		// demo board
-   BD_PCL818 = 0x05,		// PCL-818 board
-   BD_PCL818H = 0x11,	// PCL-818H
-   BD_PCL818L = 0x21,	// PCL-818L
-   BD_PCL818HG = 0x22,	// PCL-818HG
-   BD_PCL818HD = 0x2b,	// PCL-818HD
-   BD_PCM3718 = 0x37,	// PCM-3718
-   BD_PCM3724 = 0x38,	// PCM-3724
-   BD_PCM3730 = 0x5a,	// PCM-3730
-   BD_PCI1750 = 0x5e,	// PCI-1750
-   BD_PCI1751 = 0x5f,	// PCI-1751
-   BD_PCI1710 = 0x60,	// PCI-1710
-   BD_PCI1712 = 0x61,	// PCI-1712
-   BD_PCI1710HG = 0x67,	// PCI-1710HG
-   BD_PCI1711 = 0x73,	// PCI-1711
-   BD_PCI1711L = 0x75,	// PCI-1711L 
-   BD_PCI1713 = 0x68,	// PCI-1713
-   BD_PCI1753 = 0x69,	// PCI-1753
-   BD_PCI1760 = 0x6a,	// PCI-1760
-   BD_PCI1720 = 0x6b,	// PCI-1720
-   BD_PCM3718H = 0x6d,	// PCM-3718H
-   BD_PCM3718HG = 0x6e,	// PCM-3718HG
-   BD_PCI1716 = 0x74,	// PCI-1716
-   BD_PCI1731 = 0x75,	// PCI-1731
-   BD_PCI1754 = 0x7b,	// PCI-1754
-   BD_PCI1752 = 0x7c,	// PCI-1752
-   BD_PCI1756 = 0x7d,	// PCI-1756
-   BD_PCM3725 = 0x7f,	// PCM-3725
-   BD_PCI1762 = 0x80,	// PCI-1762
-   BD_PCI1721 = 0x81,	// PCI-1721
-   BD_PCI1761 = 0x82,	// PCI-1761
-   BD_PCI1723 = 0x83,	// PCI-1723
-   BD_PCI1730 = 0x87,	// PCI-1730
-   BD_PCI1733 = 0x88,	// PCI-1733
-   BD_PCI1734 = 0x89,	// PCI-1734
-   BD_PCI1710L = 0x90,	// PCI-1710L
-   BD_PCI1710HGL = 0x91,// PCI-1710HGL
-   BD_PCM3712 = 0x93,	// PCM-3712
-   BD_PCM3723 = 0x94,	// PCM-3723
-   BD_PCI1780 = 0x95,	// PCI-1780
-   BD_CPCI3756 = 0x96,	// CPCI-3756
-   BD_PCI1755 = 0x97,	// PCI-1755
-   BD_PCI1714 = 0x98,	// PCI-1714
-   BD_PCI1757 = 0x99,	// PCI-1757
-   BD_MIC3716 = 0x9A,	// MIC-3716
-   BD_MIC3761 = 0x9B,	// MIC-3761
-   BD_MIC3753 = 0x9C,		// MIC-3753
-   BD_MIC3780 = 0x9D,		// MIC-3780
-   BD_PCI1724 = 0x9E,		// PCI-1724
-   BD_PCI1758UDI = 0xA3,	// PCI-1758UDI
-   BD_PCI1758UDO = 0xA4,	// PCI-1758UDO
-   BD_PCI1747 = 0xA5,		// PCI-1747
-   BD_PCM3780 = 0xA6,		// PCM-3780 
-   BD_MIC3747 = 0xA7,		// MIC-3747
-   BD_PCI1758UDIO = 0xA8,	// PCI-1758UDIO
-   BD_PCI1712L = 0xA9,		// PCI-1712L
-   BD_PCI1763UP = 0xAC,	   // PCI-1763UP
-   BD_PCI1736UP = 0xAD,	   // PCI-1736UP
-   BD_PCI1714UL = 0xAE,	   // PCI-1714UL
-   BD_MIC3714 = 0xAF,		// MIC-3714
-   BD_PCM3718HO = 0xB1,	   // PCM-3718HO
-   BD_PCI1741U = 0xB3,		// PCI-1741U
-   BD_MIC3723 = 0xB4,		// MIC-3723 
-   BD_PCI1718HDU = 0xB5,	// PCI-1718HDU
-   BD_MIC3758DIO = 0xB6,	// MIC-3758DIO
-   BD_PCI1727U = 0xB7,		// PCI-1727U
-   BD_PCI1718HGU = 0xB8,	// PCI-1718HGU
-   BD_PCI1715U = 0xB9,		// PCI-1715U
-   BD_PCI1716L = 0xBA,		// PCI-1716L
-   BD_PCI1735U = 0xBB,		// PCI-1735U
-   BD_USB4711 = 0xBC,		// USB4711
-   BD_PCI1737U = 0xBD,		// PCI-1737U
-   BD_PCI1739U = 0xBE,		// PCI-1739U
-   BD_PCI1742U = 0xC0,		// PCI-1742U
-   BD_USB4718 = 0xC6,		// USB-4718
-   BD_MIC3755 = 0xC7,		// MIC3755
-   BD_USB4761 = 0xC8,		// USB4761
-   BD_PCI1784 = 0XCC,		// PCI-1784
-   BD_USB4716 = 0xCD,		// USB4716
-   BD_PCI1752U = 0xCE,		// PCI-1752U
-   BD_PCI1752USO = 0xCF,	// PCI-1752USO
-   BD_USB4751 = 0xD0,		// USB4751
-   BD_USB4751L = 0xD1,		// USB4751L
-   BD_USB4750 = 0xD2,		// USB4750
-   BD_MIC3713 = 0xD3,		// MIC-3713
-   BD_USB4711A = 0xD8,		// USB4711A
-   BD_PCM3753P = 0xD9,		// PCM3753P
-   BD_PCM3784  = 0xDA,		// PCM3784
-   BD_PCM3761I = 0xDB,     // PCM-3761I
-   BD_MIC3751  = 0xDC,     // MIC-3751
-   BD_PCM3730I = 0xDD,     // PCM-3730I
-   BD_PCM3813I = 0xE0,     // PCM-3813I
-   BD_PCIE1744	= 0xE1,     //PCIE-1744
-   BD_PCI1730U	= 0xE2, 	   // PCI-1730U
-   BD_PCI1760U	= 0xE3,	   //PCI-1760U
-   BD_MIC3720	= 0xE4,	   //MIC-3720
-   BD_PCM3810I = 0xE9,     // PCM-3810I
-   BD_USB4702  = 0xEA,     // USB4702
-   BD_USB4704  = 0xEB,     // USB4704
-   BD_PCM3810I_HG = 0xEC,  // PCM-3810I_HG
-   BD_PCI1713U = 0xED,		// PCI-1713U 
-
-   // !!!BioDAQ only Product ID starts from here!!!
-   BD_PCI1706U_AE   = 0x800,
-   BD_PCI1706MSU_AE = 0x801,
-   BD_PCI1706UL_AE  = 0x802,
 } ProductId;
 
 #endif // _BDAQ_TYPES_DEFINED
@@ -1390,17 +922,6 @@ struct BDaqLib
    ErrorCode ( *pfnBufferedDoRun)(HANDLE);
    ErrorCode ( *pfnBufferedDoStop)(HANDLE,long);
    ErrorCode ( *pfnBufferedDoRelease)(HANDLE);
-   // Counter APIs
-   ErrorCode ( *pfnCounterReset)(HANDLE,long,long);
-   ErrorCode ( *pfnEventCountStart)(HANDLE,long,long);
-   ErrorCode ( *pfnEventCountRead)(HANDLE,long,long,long*);
-   ErrorCode ( *pfnOneShotStart)(HANDLE,long,long);
-   ErrorCode ( *pfnTimerPulseStart)(HANDLE,long,long);
-   ErrorCode ( *pfnFrequencyMeasureStart)(HANDLE,long,long);
-   ErrorCode ( *pfnFrequencyMeasureRead)(HANDLE,long,long,double*);
-   ErrorCode ( *pfnPwmInStart)(HANDLE, long, long);
-   ErrorCode ( *pfnPwmInRead)(HANDLE,long,long,double*,double*);
-   ErrorCode ( *pfnPwmOutStart)(HANDLE, long, long);
 };
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300)
@@ -1447,40 +968,10 @@ __inline BOOL InitializeBioDaqLibray(BDaqLib *bdaqLib)
             //AO apis
 				( *(void **)&bdaqLib->pfnAoWriteSamples                 = dlsym(bdaqLib->instHandle, "AdxAoWriteSamples"));
             ( *(void **)&bdaqLib->pfnAoAccessValueRange             = dlsym(bdaqLib->instHandle, "AdxAoAccessValueRange"));
-				//( *(void **)&bdaqLib->pfnBufferedAoPrepare              = dlsym(bdaqLib->instHandle, "AdxBufferedAoPrepare"));
-				//( *(void **)&bdaqLib->pfnBufferedAoRunOnce              = dlsym(bdaqLib->instHandle, "AdxBufferedAoRunOnce"));
-				//( *(void **)&bdaqLib->pfnBufferedAoRun                  = dlsym(bdaqLib->instHandle, "AdxBufferedAoRun"));
-				//( *(void **)&bdaqLib->pfnBufferedAoStop                 = dlsym(bdaqLib->instHandle, "AdxBufferedAoStop"));
-				//( *(void **)&bdaqLib->pfnBufferedAoScaleData            = dlsym(bdaqLib->instHandle, "AdxBufferedAoScaleData"));
-				//( *(void **)&bdaqLib->pfnBufferedAoRelease              = dlsym(bdaqLib->instHandle, "AdxBufferedAoRelease"));
             //DIO apis
 				( *(void **)&bdaqLib->pfnDiReadPorts                    = dlsym(bdaqLib->instHandle, "AdxDiReadPorts"));
 				( *(void **)&bdaqLib->pfnDoWritePorts                   = dlsym(bdaqLib->instHandle, "AdxDoWritePorts"));
 				( *(void **)&bdaqLib->pfnDoReadBackPorts                = dlsym(bdaqLib->instHandle, "AdxDoReadBackPorts"));
-				//( *(void **)&bdaqLib->pfnDiSnapStart                    = dlsym(bdaqLib->instHandle, "AdxDiSnapStart"));
-				//( *(void **)&bdaqLib->pfnDiSnapStop                     = dlsym(bdaqLib->instHandle, "AdxDiSnapStop"));
-				//( *(void **)&bdaqLib->pfnBufferedDiPrepare              = dlsym(bdaqLib->instHandle, "AdxBufferedDiPrepare"));
-				//( *(void **)&bdaqLib->pfnBufferedDiRunOnce              = dlsym(bdaqLib->instHandle, "AdxBufferedDiRunOnce"));
-				//( *(void **)&bdaqLib->pfnBufferedDiRun                  = dlsym(bdaqLib->instHandle, "AdxBufferedDiRun"));
-				//( *(void **)&bdaqLib->pfnBufferedDiStop                 = dlsym(bdaqLib->instHandle, "AdxBufferedDiStop"));
-				//( *(void **)&bdaqLib->pfnBufferedDiRelease              = dlsym(bdaqLib->instHandle, "AdxBufferedDiRelease"));
-				//( *(void **)&bdaqLib->pfnBufferedDoPrepare              = dlsym(bdaqLib->instHandle, "AdxBufferedDoPrepare"));
-				//( *(void **)&bdaqLib->pfnBufferedDoRunOnce              = dlsym(bdaqLib->instHandle, "AdxBufferedDoRunOnce"));
-				//( *(void **)&bdaqLib->pfnBufferedDoRun                  = dlsym(bdaqLib->instHandle, "AdxBufferedDoRun"));
-				//( *(void **)&bdaqLib->pfnBufferedDoStop                 = dlsym(bdaqLib->instHandle, "AdxBufferedDoStop"));
-				//( *(void **)&bdaqLib->pfnBufferedDoRelease              = dlsym(bdaqLib->instHandle, "AdxBufferedDoRelease"));
-            //Counter apis
-				//( *(void **)&bdaqLib->pfnCounterReset                   = dlsym(bdaqLib->instHandle, "AdxCounterReset"));
-				//( *(void **)&bdaqLib->pfnEventCountStart                = dlsym(bdaqLib->instHandle, "AdxEventCountStart"));
-				//( *(void **)&bdaqLib->pfnEventCountRead                 = dlsym(bdaqLib->instHandle, "AdxEventCountRead"));
-				//( *(void **)&bdaqLib->pfnOneShotStart                   = dlsym(bdaqLib->instHandle, "AdxOneShotStart"));
-				//( *(void **)&bdaqLib->pfnTimerPulseStart                = dlsym(bdaqLib->instHandle, "AdxTimerPulseStart"));
-				//( *(void **)&bdaqLib->pfnFrequencyMeasureStart          = dlsym(bdaqLib->instHandle, "AdxFrequencyMeasureStart"));
-
-				//( *(void **)&bdaqLib->pfnFrequencyMeasureRead           = dlsym(bdaqLib->instHandle, "AdxFrequencyMeasureRead"));
-				//( *(void **)&bdaqLib->pfnPwmInStart                     = dlsym(bdaqLib->instHandle, "AdxPwmInStart"));
-				//( *(void **)&bdaqLib->pfnPwmInRead                      = dlsym(bdaqLib->instHandle, "AdxPwmInRead"));
-				//( *(void **)&bdaqLib->pfnPwmOutStart                    = dlsym(bdaqLib->instHandle, "AdxPwmOutStart"));
 								
          }
       }
@@ -1492,57 +983,6 @@ __inline BDaqLib * GetBDaqLib()
 	return &bdaqLib;
 }
 
-//-------------------------------------------------------
-// global helper APIs
-//-------------------------------------------------------
-__inline ErrorCode   AdxDeviceGetLinkageInfo(
-   IN  long            deviceParent, 
-   IN  long            index,
-   OUT long*           deviceNumber,
-   OUT OPTIONAL WCHAR* description, 
-   OUT OPTIONAL long*  subDeviceCount)
-{
-   if (InitializeBioDaqLibray(GetBDaqLib()))
-   {
-      return GetBDaqLib()->pfnDeviceGetLinkageInfo(deviceParent, index, deviceNumber, description, subDeviceCount);
-   }
-   return ErrorDriverNotFound;
-}
-__inline ErrorCode   AdxGetValueRangeInformation( 
-   IN ValueRange              type, 
-   IN long                    descBufSize, 
-   OUT OPTIONAL WCHAR*        description, 
-   OUT OPTIONAL MathInterval* range,  
-   OUT OPTIONAL ValueUnit*    unit)
-{
-   if (InitializeBioDaqLibray(GetBDaqLib()))
-   {
-      return GetBDaqLib()->pfnGetValueRangeInformation(type, descBufSize, description, range, (long*)unit);
-   }
-   return ErrorDriverNotFound;
-}
-__inline ErrorCode   AdxGetSignalConnectionInformation(
-   IN SignalDrop       signal,
-   IN long             descBufSize,
-   OUT OPTIONAL WCHAR* description,
-   OUT OPTIONAL SignalPosition* position)
-{
-   if (InitializeBioDaqLibray(GetBDaqLib()))
-   {
-      return GetBDaqLib()->pfnGetSignalConnectionInformation(signal, descBufSize, description, (long*)position);
-   }
-   return ErrorDriverNotFound;
-}
-__inline double   AdxTranslateTemperatureScale(
-   IN TemperatureDegree degreeType,
-   IN double            degreeCelsius )
-{
-   if (InitializeBioDaqLibray(GetBDaqLib()))
-   {
-      return GetBDaqLib()->pfnTranslateTemperatureScale(degreeType, degreeCelsius);
-   }
-   return ErrorDriverNotFound;
-}
 //-------------------------------------------------------
 // event APIs
 //-------------------------------------------------------
@@ -1649,18 +1089,6 @@ __inline ErrorCode   AdxDeviceIoModuleSearch(
    return GetBDaqLib()->pfnDeviceIoModuleSearch(deviceHandle, modulesInfo, count, actualCnt);
 }
 
-/*
-__inline ErrorCode   AdxDeviceShowConfigDialogBox(
-   IN HANDLE deviceHandle, 
-   IN HWND   parentWindow, 
-   IN RECT*  region,
-   IN long   dataSource,
-   IN BOOL   modal,
-   OUT HWND* dialogWindow)
-{
-   return GetBDaqLib()->pfnDeviceShowConfigDialogBox(deviceHandle, parentWindow, region, dataSource, modal, dialogWindow);
-}
-*/
 //-------------------------------------------------------
 // analog input APIs
 //-------------------------------------------------------
@@ -1701,41 +1129,6 @@ __inline ErrorCode   AdxAiGetValueRange(
    return GetBDaqLib()->pfnAiAccessValueRange(aiHandle, mdlNumber, channelStart, channelCount, valueRange, 0);
 }
 
-
-__inline ErrorCode   AdxBufferedAiPrepare(
-   IN HANDLE  aiHandle, 
-   IN long    dataCount, 
-   OUT void** dataBuffer)
-{
-   return GetBDaqLib()->pfnBufferedAiPrepare(aiHandle, dataCount, dataBuffer);
-}
-__inline ErrorCode   AdxBufferedAiRunOnce(
-   IN HANDLE aiHandle, 
-   IN BOOL   asynchronous)
-{
-   return GetBDaqLib()->pfnBufferedAiRunOnce(aiHandle, asynchronous);
-}
-__inline ErrorCode   AdxBufferedAiRun(IN HANDLE aiHandle)
-{
-   return GetBDaqLib()->pfnBufferedAiRun(aiHandle);
-}
-__inline ErrorCode   AdxBufferedAiStop(IN HANDLE aiHandle)
-{
-   return GetBDaqLib()->pfnBufferedAiStop(aiHandle);
-}
-__inline ErrorCode   AdxBufferedAiRelease(IN HANDLE aiHandle)
-{
-   return GetBDaqLib()->pfnBufferedAiRelease(aiHandle);
-}
-__inline ErrorCode   AdxBufferedAiScaleData(
-   IN HANDLE              aiHandle,
-   IN void*               rawData,
-   OUT double*            scaledData,
-   IN long                dataCount,
-   IN OUT OPTIONAL long*  channelOffset)
-{
-   return GetBDaqLib()->pfnBufferedAiScaleData(aiHandle, rawData, scaledData, dataCount, channelOffset);
-}
 //-------------------------------------------------------
 // analog output APIs
 //-------------------------------------------------------
@@ -1835,149 +1228,7 @@ __inline ErrorCode   AdxDoReadBackPorts(
 {
    return GetBDaqLib()->pfnDoReadBackPorts(dioHandle, mdlNumber, portStart, portCount, dataBuffer);
 }
-__inline ErrorCode   AdxBufferedDiPrepare(
-   IN HANDLE  dioHandle,
-   IN long    dataCount,
-   OUT void** dataBuffer)
-{
-   return GetBDaqLib()->pfnBufferedDiPrepare(dioHandle, dataCount, dataBuffer);
-}
-__inline ErrorCode   AdxBufferedDiRunOnce(
-   IN HANDLE dioHandle, 
-   IN BOOL   asynchronous)
-{
-   return GetBDaqLib()->pfnBufferedDiRunOnce(dioHandle, asynchronous);
-}
-__inline ErrorCode   AdxBufferedDiRun(IN HANDLE dioHandle)
-{
-   return GetBDaqLib()->pfnBufferedDiRun(dioHandle);
-}
-__inline ErrorCode   AdxBufferedDiStop(IN HANDLE dioHandle)
-{
-   return GetBDaqLib()->pfnBufferedDiStop(dioHandle);
-}
-__inline ErrorCode   AdxBufferedDiRelease(IN HANDLE dioHandle)
-{
-   return GetBDaqLib()->pfnBufferedDiRelease(dioHandle);
-}
-__inline ErrorCode   AdxBufferedDoPrepare(
-   IN HANDLE  dioHandle,
-   IN long    dataCount,
-   OUT void** dataBuffer)
-{
-   return GetBDaqLib()->pfnBufferedDoPrepare(dioHandle, dataCount, dataBuffer);
-}
-__inline ErrorCode   AdxBufferedDoRunOnce(
-   IN HANDLE dioHandle, 
-   IN BOOL   asynchronous)
-{
-   return GetBDaqLib()->pfnBufferedDoRunOnce(dioHandle, asynchronous);
-}
-__inline ErrorCode   AdxBufferedDoRun(IN HANDLE dioHandle)
-{
-   return GetBDaqLib()->pfnBufferedDoRun(dioHandle);
-}
-__inline ErrorCode   AdxBufferedDoStop(IN HANDLE dioHandle, long action)
-{
-   return GetBDaqLib()->pfnBufferedDoStop(dioHandle, action);
-}
-__inline ErrorCode   AdxBufferedDoRelease(IN HANDLE dioHandle)
-{
-   return GetBDaqLib()->pfnBufferedDoRelease(dioHandle);
-}
-__inline ErrorCode   AdxDiSnapStart(
-   IN HANDLE  dioHandle,
-   IN EventId id,
-   IN long    portStart,
-   IN long    portCount,
-   OUT BYTE** dataBuffer)
-{
-   return GetBDaqLib()->pfnDiSnapStart(dioHandle, id, portStart, portCount, dataBuffer);
-}
-__inline ErrorCode   AdxDiSnapStop(
-   IN HANDLE  dioHandle,
-   IN EventId id)
-{
-   return GetBDaqLib()->pfnDiSnapStop(dioHandle, id);
-}
 
-//-------------------------------------------------------
-// counter/timer APIs
-//-------------------------------------------------------
-__inline ErrorCode   AdxCounterReset(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long   counterCount )
-{
-   return GetBDaqLib()->pfnCounterReset(cntrHandle, counterStart, counterCount);
-}
-__inline ErrorCode   AdxEventCountStart(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long   counterCount )
-{
-   return GetBDaqLib()->pfnEventCountStart(cntrHandle, counterStart, counterCount);
-}
-__inline ErrorCode   AdxEventCountRead(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long	 counterCount,
-   OUT long* eventCount )
-{
-   return GetBDaqLib()->pfnEventCountRead(cntrHandle, counterStart, counterCount, eventCount);
-}
-__inline ErrorCode   AdxOneShotStart(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long	 counterCount)
-{
-   return GetBDaqLib()->pfnOneShotStart(cntrHandle, counterStart, counterCount);
-}
-__inline ErrorCode   AdxTimerPulseStart(
-   IN HANDLE  cntrHandle,
-   IN long    counterStart,
-   IN long	  counterCount)
-{
-   return GetBDaqLib()->pfnTimerPulseStart(cntrHandle, counterStart, counterCount);
-}
-__inline ErrorCode   AdxFrequencyMeasureStart(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long   counterCount )
-{
-   return GetBDaqLib()->pfnFrequencyMeasureStart(cntrHandle, counterStart, counterCount);
-}
-__inline ErrorCode   AdxFrequencyMeasureRead(
-   IN HANDLE   cntrHandle,
-   IN long     counterStart,
-   IN long     counterCount,
-   OUT double* frequency )
-{
-   return GetBDaqLib()->pfnFrequencyMeasureRead(cntrHandle, counterStart, counterCount, frequency);
-}
-__inline ErrorCode   AdxPwmInStart(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long   groupCount )
-{
-   return GetBDaqLib()->pfnPwmInStart(cntrHandle, counterStart, groupCount);
-}
-__inline ErrorCode   AdxPwmInRead(
-   IN HANDLE   cntrHandle,
-   IN long     counterStart,
-   IN long     groupCount,
-   OUT double* hiPeriod,
-   OUT double* lowPeriod)
-{
-   return GetBDaqLib()->pfnPwmInRead(cntrHandle, counterStart, groupCount, hiPeriod, lowPeriod);
-}
-__inline ErrorCode   AdxPwmOutStart(
-   IN HANDLE cntrHandle,
-   IN long   counterStart,
-   IN long   counterCount )
-{
-   return GetBDaqLib()->pfnPwmOutStart(cntrHandle, counterStart, counterCount);
-}
 
 // **********************************************************
 // Bionic DAQ classes, for c++ only
@@ -1991,7 +1242,6 @@ class BDaqModule;
 class BDaqAi;
 class BDaqAo;
 class BDaqDio;
-class BDaqCntr;
 class BDaqDevice;
 class BDaqModuleManager;
 
@@ -2170,16 +1420,9 @@ public:
    ErrorCode Read(long mdlNumber, long chStart, long chCount, short dataRaw[], double dataScaled[]);   // for the device whose raw data is in 16bits format
    ErrorCode Read(long mdlNumber, long chStart, long chCount, long dataRaw[], double dataScaled[]) ;   // for the device whose raw data is in 32bits format
 
-   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
-   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
+   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
+   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
    ErrorCode Calibrate(long mdlNumber, long caliType);
-   // buffered AI methods
-   ErrorCode BfdAiPrepare(long dataCount, void* * dataRaw);
-   ErrorCode BfdAiRunOnce(bool asynchronous);
-   ErrorCode BfdAiRun();
-   ErrorCode BfdAiScaleData(void* dataRaw, double dataScaled[], long dataCount, long* chOffset);
-   ErrorCode BfdAiStop();
-   ErrorCode BfdAiRelease();
 protected:
    friend class BDaqDevice;
    // internal used only
@@ -2204,8 +1447,8 @@ public:
    ErrorCode Write(long mdlNumber, long chStart, long chCount, short dataRaw[]);   // for the device whose raw data is in 16bits format
    ErrorCode Write(long mdlNumber, long chStart, long chCount, long dataRaw[]);    // for the device whose raw data is in 32bits format
 
-   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
-   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, BYTE valueRange[]);
+   ErrorCode GetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
+   ErrorCode SetValueRange(long mdlNumber, long chStart, long chCount, long valueRange[]);
    // buffered AO methods
    ErrorCode BfdAoPrepare(long dataCount, void* * dataRaw);
    ErrorCode BfdAoRunOnce(bool asynchronous);
@@ -2237,24 +1480,6 @@ public:
    ErrorCode DoRead(long mdlNumber, long port, BYTE& data);
    ErrorCode DoRead(long mdlNumber, long portStart, long portCount, BYTE data[]);
 
-   // DI snap methods
-   ErrorCode DiSnapStart(EventId id, long portStart, long portCount, BYTE** buffer);
-   ErrorCode DiSnapStop(EventId id);
-
-   // Buffered DI methods
-   ErrorCode BfdDiPrepare(long dataCount, void* * data);
-   ErrorCode BfdDiRunOnce(bool asynchronous);
-   ErrorCode BfdDiRun();
-   ErrorCode BfdDiStop();
-   ErrorCode BfdDiRelease();
-
-   // Buffered DO methods
-   ErrorCode BfdDoPrepare(long dataCount, void* * data);
-   ErrorCode BfdDoRunOnce(bool asynchronous);
-   ErrorCode BfdDoRun();
-   ErrorCode BfdDoStop(long action);
-   ErrorCode BfdDoRelease();
-
 protected:
    friend class BDaqDevice;
 
@@ -2267,58 +1492,15 @@ protected:
    }
 };
 
-class BDaqCntr : public BDaqModule
-{
-public:
-   // Common methods
-   ErrorCode Reset(long cntrStart, long cntrCount);
-
-   // Event Counting methods
-   ErrorCode EventCountStart(long cntrStart, long cntrCount);
-   ErrorCode EventCountRead(long cntr, long& cntrValue);
-   ErrorCode EventCountRead(long cntrStart, long cntrCount, long cntrValue[]);
-
-   // One-Shot methods
-   ErrorCode OneShotStart(long cntrStart, long cntrCount);
-
-   // Timer/Pulse methods
-   ErrorCode TimerPulseStart(long cntrStart, long cntrCount);
-
-   // Frequency Measurement methods
-   ErrorCode FreqMeasureStart(long cntrStart, long cntrCount);
-   ErrorCode FreqMeasureRead(long cntr, double& frequency);
-   ErrorCode FreqMeasureRead(long cntrStart, long cntrCount, double frequency[]);
-
-   // Pulse width measurement
-   ErrorCode PwmInStart(long cntrStart, long groupCount);
-   ErrorCode PwmInRead(long cntr, double& hiPeriod, double& lowPeriod);
-   ErrorCode PwmInRead(long cntrStart, long groupCount, double hiPeriod[], double lowPeriod[]);
-
-   // Pulse width modulation
-   ErrorCode PwmOutStart(long cntrStart, long cntrCount);
-
-protected:
-   // internal used only
-   friend class BDaqDevice;
-   BDaqCntr(HANDLE cntrHandle) : BDaqModule(cntrHandle)
-   {
-   }
-   virtual ~BDaqCntr()
-   {
-   }
-};
-
 class BDaqDevice : public BDaqModule
 {
 public:
    // Methods
    static ErrorCode Open(int deviceNumber, AccessMode mode, BDaqDevice* & device);
-   static ErrorCode Open(WCHAR const *deviceDescription, AccessMode mode, BDaqDevice* & device);
 
    ErrorCode GetModule(long index, BDaqAi * & ai);
    ErrorCode GetModule(long index, BDaqAo * & ao);
    ErrorCode GetModule(long index, BDaqDio * & dio);
-   ErrorCode GetModule(long index, BDaqCntr * & cntr);
    ErrorCode GetModule(ModuleType type, long index, BDaqModule * & module);
 
    ErrorCode RefreshProperties();
@@ -2560,12 +1742,12 @@ inline ErrorCode BDaqAi::Read(long mdlNumber, long chStart, long chCount, long d
    return AdxAiReadSamples(get_Handle(), mdlNumber, chStart, chCount, dataRaw, dataScaled);
 }
 
-inline ErrorCode BDaqAi::SetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
+inline ErrorCode BDaqAi::SetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
 {
    return AdxAiSetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
 
-inline ErrorCode BDaqAi::GetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
+inline ErrorCode BDaqAi::GetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
 {
    return AdxAiGetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
@@ -2573,33 +1755,6 @@ inline ErrorCode BDaqAi::GetValueRange(long mdlNumber,long chStart,long chCount,
 inline ErrorCode BDaqAi::Calibrate(long mdlNumber, long caliType)
 {
    return AdxAiCalibrate(get_Handle(), mdlNumber, caliType);
-}
-
-
-// buffered AI methods
-inline ErrorCode BDaqAi::BfdAiPrepare(long dataCount, void* * dataRaw)
-{
-   return AdxBufferedAiPrepare(get_Handle(), dataCount, dataRaw);
-}
-inline ErrorCode BDaqAi::BfdAiRunOnce(bool asynchronous)
-{
-   return AdxBufferedAiRunOnce(get_Handle(), asynchronous ? 1 : 0);
-}
-inline ErrorCode BDaqAi::BfdAiRun()
-{
-   return AdxBufferedAiRun(get_Handle());
-}
-inline ErrorCode BDaqAi::BfdAiScaleData(void* dataRaw, double dataScaled[], long dataCount, long* chOffset)
-{
-   return AdxBufferedAiScaleData(get_Handle(), dataRaw, dataScaled, dataCount, chOffset);
-}
-inline ErrorCode BDaqAi::BfdAiStop()
-{
-   return AdxBufferedAiStop(get_Handle());
-}
-inline ErrorCode BDaqAi::BfdAiRelease()
-{
-   return AdxBufferedAiRelease(get_Handle());
 }
 
 // *********************************************************************
@@ -2637,12 +1792,12 @@ inline ErrorCode BDaqAo::Write(long mdlNumber, long chStart, long chCount, long 
    return AdxAoWriteSamples(get_Handle(), mdlNumber, chStart, chCount, dataRaw, NULL);
 }
 
-inline ErrorCode BDaqAo::SetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
+inline ErrorCode BDaqAo::SetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
 {
    return AdxAoSetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
 
-inline ErrorCode BDaqAo::GetValueRange(long mdlNumber,long chStart,long chCount,BYTE valueRange [])
+inline ErrorCode BDaqAo::GetValueRange(long mdlNumber,long chStart,long chCount,long valueRange [])
 {
    return AdxAoGetValueRange(get_Handle(), mdlNumber, chStart, chCount, valueRange);
 }
@@ -2705,128 +1860,6 @@ inline ErrorCode BDaqDio::DoRead(long mdlNumber, long portStart, long portCount,
    return AdxDoReadBackPorts(get_Handle(), mdlNumber, portStart, portCount, data);
 }
 
-// DI snap methods
-inline ErrorCode BDaqDio::DiSnapStart(EventId id, long portStart, long portCount, BYTE** buffer)
-{
-   return AdxDiSnapStart(get_Handle(), id, portStart, portCount, buffer);
-}
-inline ErrorCode BDaqDio::DiSnapStop(EventId id)
-{
-   return AdxDiSnapStop(get_Handle(), id);
-}
-
-// Buffered DI methods
-inline ErrorCode BDaqDio::BfdDiPrepare(long dataCount, void* * data)
-{
-   return AdxBufferedDiPrepare(get_Handle(), dataCount, data);
-}
-inline ErrorCode BDaqDio::BfdDiRunOnce(bool asynchronous)
-{
-   return AdxBufferedDiRunOnce(get_Handle(), asynchronous ? 1 : 0);
-}
-inline ErrorCode BDaqDio::BfdDiRun()
-{
-   return AdxBufferedDiRun(get_Handle());
-}
-inline ErrorCode BDaqDio::BfdDiStop()
-{
-   return AdxBufferedDiStop(get_Handle());
-}
-inline ErrorCode BDaqDio::BfdDiRelease()
-{
-   return AdxBufferedDiRelease(get_Handle());
-}
-
-// Buffered DO methods
-inline ErrorCode BDaqDio::BfdDoPrepare(long dataCount, void* * data)
-{
-   return AdxBufferedDoPrepare(get_Handle(), dataCount, data);
-}
-inline ErrorCode BDaqDio::BfdDoRunOnce(bool asynchronous)
-{
-   return AdxBufferedDoRunOnce(get_Handle(), asynchronous ? 1 : 0);
-}
-inline ErrorCode BDaqDio::BfdDoRun()
-{
-   return AdxBufferedDoRun(get_Handle());
-}
-inline ErrorCode BDaqDio::BfdDoStop(long action)
-{
-   return AdxBufferedDoStop(get_Handle(), action);
-}
-inline ErrorCode BDaqDio::BfdDoRelease()
-{
-   return AdxBufferedDoRelease(get_Handle());
-}
-
-// *********************************************************************
-// inline functions of BDaqCntr
-// *********************************************************************
-// Common methods
-inline ErrorCode BDaqCntr::Reset(long cntrStart, long cntrCount)
-{
-   return AdxCounterReset(get_Handle(), cntrStart, cntrCount);
-}
-
-// Event Counting methods
-inline ErrorCode BDaqCntr::EventCountStart(long cntrStart, long cntrCount)
-{
-   return AdxEventCountStart(get_Handle(), cntrStart, cntrCount);
-}
-inline ErrorCode BDaqCntr::EventCountRead(long cntr, long& cntrValue)
-{
-   return AdxEventCountRead(get_Handle(), cntr, 1, &cntrValue);
-}
-inline ErrorCode BDaqCntr::EventCountRead(long cntrStart, long cntrCount, long cntrValue[])
-{
-   return AdxEventCountRead(get_Handle(), cntrStart, cntrCount, cntrValue);
-}
-
-// One-Shot methods
-inline ErrorCode BDaqCntr::OneShotStart(long cntrStart, long cntrCount)
-{
-   return AdxOneShotStart(get_Handle(), cntrStart, cntrCount);
-}
-
-// Timer/Pulse methods
-inline ErrorCode BDaqCntr::TimerPulseStart(long cntrStart, long cntrCount)
-{
-   return AdxTimerPulseStart(get_Handle(), cntrStart, cntrCount);
-}
-
-// Frequency Measurement methods
-inline ErrorCode BDaqCntr::FreqMeasureStart(long cntrStart, long cntrCount)
-{
-   return AdxFrequencyMeasureStart(get_Handle(), cntrStart, cntrCount);
-}
-inline ErrorCode BDaqCntr::FreqMeasureRead(long cntr, double& frequency)
-{
-   return AdxFrequencyMeasureRead(get_Handle(), cntr, 1, &frequency);
-}
-inline ErrorCode BDaqCntr::FreqMeasureRead(long cntrStart, long cntrCount, double frequency[])
-{
-   return AdxFrequencyMeasureRead(get_Handle(), cntrStart, cntrCount, frequency);
-}
-
-// Pulse width measurement
-inline ErrorCode BDaqCntr::PwmInStart(long cntrStart, long groupCount)
-{
-   return AdxPwmInStart(get_Handle(), cntrStart, groupCount);
-}
-inline ErrorCode BDaqCntr::PwmInRead(long cntr, double& hiPeriod, double& lowPeriod)
-{
-   return AdxPwmInRead(get_Handle(), cntr, 1, &hiPeriod, &lowPeriod);
-}
-inline ErrorCode BDaqCntr::PwmInRead(long cntrStart, long groupCount, double hiPeriod[], double lowPeriod[])
-{
-   return AdxPwmInRead(get_Handle(), cntrStart, groupCount, hiPeriod, lowPeriod);
-}
-
-// Pulse width modulation
-inline ErrorCode BDaqCntr::PwmOutStart(long cntrStart, long cntrCount)
-{
-   return AdxPwmOutStart(get_Handle(), cntrStart, cntrCount);
-}
 
 // *********************************************************************
 // inline functions of BDaqDevice
@@ -2859,37 +1892,7 @@ inline ErrorCode BDaqDevice::Open(int deviceNumber, AccessMode mode, BDaqDevice*
    }
    return ret;
 }
-inline ErrorCode BDaqDevice::Open(WCHAR const * deviceDescription, AccessMode mode, BDaqDevice* & device)
-{
-   device = NULL;
-   if (deviceDescription == NULL)
-   {
-      return ErrorBufferIsNull;
-   }
 
-   WCHAR curDevDesc[256] = {0};
-   long  deviceNumber= -1;
-   long deviceIndex = 0;
-
-   while( true )
-   {
-      ErrorCode ret = AdxDeviceGetLinkageInfo(-1, deviceIndex, &deviceNumber, curDevDesc, NULL);
-      if ( deviceNumber == -1 )
-      {
-         // no more device
-         return ErrorDeviceNotExist;
-      }
-      if (ret == Success && strcmp(curDevDesc, deviceDescription) == 0 )
-      {
-         ret = Open(deviceNumber, mode, device);
-         if (ret == Success)
-         {
-            return ret;
-         }
-      }
-      ++deviceIndex;
-   }
-}
 
 inline ErrorCode BDaqDevice::GetModule(long index, BDaqAi * & ai)
 {
@@ -2902,10 +1905,6 @@ inline ErrorCode BDaqDevice::GetModule(long index, BDaqAo * & ao)
 inline ErrorCode BDaqDevice::GetModule(long index, BDaqDio * & dio)
 {
    return GetModule(DaqDio, index, (BDaqModule*&)dio);
-}
-inline ErrorCode BDaqDevice::GetModule(long index, BDaqCntr * & cntr)
-{
-   return GetModule(DaqCounter, index, (BDaqModule*&)cntr);
 }
 
 inline ErrorCode BDaqDevice::GetModule(ModuleType type, long index, BDaqModule* & module)
@@ -2936,9 +1935,6 @@ inline ErrorCode BDaqDevice::GetModule(ModuleType type, long index, BDaqModule* 
          case DaqDio:
             module = new BDaqDio(moduleHandle);
             break;
-         case DaqCounter:
-            module = new BDaqCntr(moduleHandle);
-            break;
          default:
             module = NULL;
             break;
@@ -2968,21 +1964,7 @@ inline ErrorCode BDaqDevice::SearchIoModules(IO_MODULE_INFO* modulesInfo, long c
 {
    return AdxDeviceIoModuleSearch(get_Handle(), modulesInfo, count, actualCnt);
 }
-/*
-inline ErrorCode BDaqDevice::ShowModalDialog(HWND parentWnd, long dataSource)
-{
-   HWND dlgWnd;
-   return AdxDeviceShowConfigDialogBox(get_Handle(), parentWnd, NULL, dataSource, 1, &dlgWnd);
-}
-inline ErrorCode BDaqDevice::ShowPopupDialog(HWND parentWnd, long dataSource, HWND* dlgWnd)
-{
-   return AdxDeviceShowConfigDialogBox(get_Handle(), parentWnd, NULL, dataSource, 0, dlgWnd);
-}
-inline ErrorCode BDaqDevice::ShowEmbedDialog(HWND parentWnd, RECT* wndRect, long dataSource, HWND* dlgWnd)
-{
-   return AdxDeviceShowConfigDialogBox(get_Handle(), parentWnd, wndRect, dataSource, 0, dlgWnd);
-}
-*/
+
 inline ErrorCode BDaqDevice::Reset(long state)
 {
    return AdxDeviceReset(get_Handle(), state);

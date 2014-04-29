@@ -179,11 +179,13 @@ static __u16 CalcCheckSum(__u8* data, __u16 len)
 inline
 ErrorCode BDaqDeviceImpl::DeviceSearch(IO_MODULE_INFO* modulesInfo, uint32 count, uint32* actualCnt)
 {
-   int i = 0;
+   unsigned int i = 0;
    int mdl_count = 0;
    
    if( modulesInfo == NULL || actualCnt == NULL)
       return ErrorBufferIsNull;
+
+   m_kstub.Ioctl(IOCTL_DEVICE_SEARCH, 0);
    
    for(i = 0; i < MIN(count, 5); i++){
       __u8 id = m_kstub.getShared()->mdlProfile[i].module_id;

@@ -21,6 +21,7 @@ SYMBOL_PATH ?= ../../../lib
 #UDEV_PATH=/etc/udev/rules.d/
 KERNELDIR ?= /mnt/adam3660/rt-linux/linux-3.2.0-psp04.06.00.11-rt
 all:
+	-cp $(SYMBOL_PATH)/Module.symvers ./
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 	-cp adam3660io.ko $(KO_PATH) 
 	#-cp Module.symvers $(SYMBOL_PATH)

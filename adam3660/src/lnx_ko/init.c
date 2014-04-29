@@ -170,7 +170,7 @@ enum hrtimer_restart snd_thread( struct hrtimer *timer )
          uint32 pre = jiffies;
 
          spi_send(daq_dev->spi_snd, &pkg); 
-         int ret = daq_event_wait(1, &cur->rsp_event, 1, 5000);  //wait data return from spi receive port or time out
+         int ret = daq_event_wait(1, &cur->rsp_event, 1, 10000);  //wait data return from spi receive port or time out
          daq_trace((KERN_ALERT"++++wait %d ms, %d jiffies\n", jiffies_to_msecs(jiffies-pre), jiffies-pre));
   //       daq_trace((KERN_ALERT"++++daq_event_wait ret = %d\n", ret));
          if(ret == 0)  //not time out
@@ -243,7 +243,7 @@ static int rcv_thread(void *arg)
       {
          //response
          int count = 0;
- //        printk(KERN_ALERT"----2. header len = %d\n", header_info_rcv.data_len);
+         printk(KERN_ALERT"----2. header len = %d\n", header_info_rcv.data_len);
          for(count = 0; count < header_info_rcv.data_len - sizeof(HEADER_INFO);)
          {
             int module_cnt = 0;
@@ -253,18 +253,18 @@ static int rcv_thread(void *arg)
                count += module_info_rcv.data_len;
                continue;
             }
-//            printk(KERN_ALERT"----3. module info id = %d, len = %d\n", module_info_rcv.module_id, module_info_rcv.data_len);
+            printk(KERN_ALERT"----3. module info id = %d, len = %d\n", module_info_rcv.module_id, module_info_rcv.data_len);
             count += module_info_rcv.data_len;       //move pointer to next module info
             for(module_cnt; module_cnt < module_info_rcv.data_len - sizeof(MODULE_INFO) - 2;)
             {
                __u16 real_data_len = 0;
-               __u8 real_data[16] = {0};
+               __u8 real_data[32] = {0};
                get_module_data(&pkg_rcv, &module_data_rcv);
-//               printk(KERN_ALERT"----4. module data type = %x, cmd = %x, chl_rng = %x\n", module_data_rcv.command_type, module_data_rcv.command, module_data_rcv.channel_rng);
+               printk(KERN_ALERT"----4. module data type = %x, cmd = %x, chl_rng = %x\n", module_data_rcv.command_type, module_data_rcv.command, module_data_rcv.channel_rng);
                
                real_data_len = calc_data_len(PKG_DIR_RCV, &module_data_rcv);
                get_data(&pkg_rcv, real_data, real_data_len);
-               //////////////////push data to task list fro receive//////////////////////
+               //////////////////push data to task list for receive//////////////////////
                daq_dev->request->task_list_rcv[daq_dev->request->recv_count].module_id = module_info_rcv.module_id;
                daq_dev->request->task_list_rcv[daq_dev->request->recv_count].module_data = module_data_rcv;
                //memcpy(daq_dev->request->task_list[daq_dev->request->recv_count].data, real_data, real_data_len);
@@ -274,12 +274,12 @@ static int rcv_thread(void *arg)
                rcv_data_offset += real_data_len;
                daq_dev->request->recv_count ++;
                ////////////////////////////////
-//               printk(KERN_ALERT"----5. real data len = %d, reques = %x,recv_count = %d\n", real_data_len, daq_dev->request, daq_dev->request->recv_count);
+               printk(KERN_ALERT"----5. real data len = %d, reques = %x,recv_count = %d\n", real_data_len, daq_dev->request, daq_dev->request->recv_count);
                module_cnt += (sizeof(MODULE_DATA) + real_data_len);
-//               printk(KERN_ALERT"----6. module count = %d\n", module_cnt);
+               printk(KERN_ALERT"----6. module count = %d\n", module_cnt);
                //for()
             }
-            
+            pkg_rcv.offset += 2; //skip chech sum(2 bytes)
          }
          
          daq_event_set(daq_dev->request->rsp_event);
@@ -352,7 +352,7 @@ static int __init daq_driver_init( void )
    {
       daq_trace((KERN_ALERT"Create spi receive thread failed!\n"));
    }
-   snd_timer.ktime = ktime_set( 0, 2000000L ); //delay 500us
+   snd_timer.ktime = ktime_set( 0, 8000000L ); //delay 500us
    snd_timer.daq_dev_t = daq_dev;
    hrtimer_init( &snd_timer.hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL );
    snd_timer.hr_timer.function = &snd_thread;

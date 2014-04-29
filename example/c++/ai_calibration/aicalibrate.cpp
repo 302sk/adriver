@@ -74,6 +74,11 @@ int main(int argc, char* argv[])
 		getchar();
 		ret = ai->Calibrate(moduleNumber, SpanCalibration);
 		CHK_RESULT(ret);
+		
+		printf("Write calibration value to flash!\n");
+		getchar();
+		ret = ai->Calibrate(moduleNumber, SaveCaliValToFlash);
+		CHK_RESULT(ret);
 
 	}while(false);
 

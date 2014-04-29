@@ -39,7 +39,7 @@ using namespace Automation::BDaq;
 // Configure the following three parameters before running the example
 //-----------------------------------------------------------------------------------
 #define         deviceNumber    0
-#define			moduleNumber	2	
+#define			moduleNumber	1	
 void show_progress(int progress)
 {
 	if(progress == 0){
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 	if(fp == NULL){
 		printf("Failed to open file!\n");
 		return 0;
-	}
+	}	
 	//Update firmware
 	ret = device->UpdateFirmware(moduleNumber, fp, target, process);
 	//Close device and release any allocated resource.

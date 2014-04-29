@@ -43,7 +43,7 @@ int daq_ioctl_di_read_port( daq_device_t *daq_dev, unsigned long arg )
    
 
    uint32 pre = jiffies;
-   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 1100);
    daq_trace((KERN_ALERT"****wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
    daq_trace((KERN_ALERT"****cur = %x cur->recv_count = %d\n", cur, cur->recv_count));
 
@@ -119,7 +119,7 @@ int daq_ioctl_do_write_port( daq_device_t *daq_dev, unsigned long arg )
    
 
    uint32 pre = jiffies;
-   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 1100);
    daq_trace((KERN_ALERT"****wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
    daq_trace((KERN_ALERT"****cur = %x cur->recv_count = %d\n", cur, cur->recv_count));
 
@@ -182,7 +182,7 @@ int daq_ioctl_do_read_port( daq_device_t *daq_dev, unsigned long arg )
    
 
    uint32 pre = jiffies;
-   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 5000);
+   evt_ret = daq_event_wait(1, &cur->cmd_event, 1, 1100);
    daq_trace((KERN_ALERT"****wait %d ms\n", jiffies_to_msecs(jiffies-pre)));
    daq_trace((KERN_ALERT"****cur = %x cur->recv_count = %d\n", cur, cur->recv_count));
 

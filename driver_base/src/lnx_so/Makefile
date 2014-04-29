@@ -30,7 +30,6 @@ obj/%.o : %.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	arm-linux-gnueabihf-g++ -O3 -fPIC -Wall -c $(CFLAGS) -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
-#	g++ -O0 -fPIC -g3 -Wall -c $(CFLAGS) -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 	
@@ -38,6 +37,7 @@ obj/%.o : %.cpp
 clean:
 	-$(RM) $(OBJS) $(TARGET) $(OBJS:.o=.d)
 	-$(RM) ./obj	
+	-$(RM) ../../../lib/$(TARGET)
 	-@echo ' '
 
 install:
